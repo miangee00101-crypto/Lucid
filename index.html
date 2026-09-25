@@ -1,0 +1,3011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>Lucid</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #17140F;
+    --bg-chat: #1B1712;
+    --panel: #211D17;
+    --panel2: #262119;
+    --sidebar: #191510;
+    --line: rgba(237,232,221,0.10);
+    --line-soft: rgba(237,232,221,0.06);
+    --text: #EDE8DD;
+    --text-dim: #A9A296;
+    --text-faint: #726C60;
+    --accent: #E08A63;
+    --accent-hover: #EF9A74;
+    --accent-soft: rgba(224,138,99,0.18);
+    --danger: #E38976;
+    --good: #8FBF7A;
+    --radius-lg: 18px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+  }
+  body.light-theme{
+    --bg: #FAF5EF;
+    --bg-chat: #FDFAF6;
+    --panel: #FFFFFF;
+    --panel2: #F1E9E0;
+    --sidebar: #F3ECE3;
+    --line: rgba(44,36,24,0.10);
+    --line-soft: rgba(44,36,24,0.06);
+    --text: #2C2418;
+    --text-dim: #6B5D4D;
+    --text-faint: #9C8D7B;
+    --accent: #C97650;
+    --accent-hover: #B85A3D;
+    --accent-soft: rgba(201,118,80,0.15);
+    --danger: #C25B45;
+    --good: #5F9A48;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%; height:100dvh;}
+  body{
+    margin:0; background: var(--bg); color: var(--text);
+    font-family:'Inter', -apple-system, sans-serif;
+    overflow:hidden; -webkit-font-smoothing:antialiased;
+    padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right);
+  }
+  .serif{ font-family:'Fraunces', serif; }
+  ::selection{ background: var(--accent-soft); color:var(--text); }
+  button{ font-family:inherit; }
+  textarea, input, select{ font-family:inherit; }
+
+  /* ---------- LOCK SCREEN ---------- */
+  #lock{ height:100%; display:flex; align-items:center; justify-content:center; animation: fadein .4s ease; background: var(--bg); padding:20px; }
+  @keyframes fadein{ from{opacity:0} to{opacity:1} }
+  .lock-card{ width:min(420px, 100%); background: var(--panel); border:1px solid var(--line); border-radius: 20px; padding:40px 32px 32px; box-shadow: 0 8px 30px rgba(0,0,0,0.22); }
+  .lock-mark{ width:64px; height:64px; border-radius:16px; background:var(--accent); display:flex; align-items:center; justify-content:center; color:#1B1712; font-size:18px; margin-bottom:18px; font-weight:700; overflow:hidden; }
+  .lock-mark svg{ width:70%; height:70%; }
+  .lock-welcome{ font-size:13px; color:var(--accent-hover); font-weight:600; margin:-8px 0 18px; }
+  .lock-title{ font-family:'Fraunces', serif; font-weight:500; font-size:26px; color:var(--text); margin:0 0 6px; }
+  .lock-sub{ color:var(--text-dim); font-size:13.5px; margin-bottom:26px; line-height:1.55; }
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:12px; font-weight:600; color:var(--text-dim); margin-bottom:7px; }
+  .field input, .field select{
+    width:100%; background:var(--bg-chat); border:1px solid var(--line); color:var(--text);
+    padding:12px 14px; border-radius:var(--radius-sm); font-size:14.5px; outline:none; transition: border-color .15s, box-shadow .15s;
+  }
+  .field input:focus, .field select:focus{ border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .btn{ width:100%; padding:13px; border-radius:var(--radius-sm); border:none; background: var(--accent); color:#1B1712; font-size:14px; font-weight:700; cursor:pointer; transition: background .15s, transform .05s; }
+  .btn:hover{ background: var(--accent-hover); }
+  .btn:active{ transform: scale(0.98); }
+  .btn-ghost{ background:transparent; border:1px solid var(--line); color:var(--text-dim); }
+  .btn-ghost:hover{ border-color:var(--text-faint); color:var(--text); background:transparent; }
+  .btn-danger{ background:transparent; border:1px solid var(--danger); color:var(--danger); }
+  .btn-danger:hover{ background:rgba(227,137,118,0.1); }
+  .btn-sm{ width:auto; padding:9px 16px; font-size:13px; }
+  .lock-foot{ margin-top:16px; font-size:11.5px; color:var(--text-faint); line-height:1.6; }
+  .error-msg{ color:var(--danger); font-size:12.5px; margin-top:-6px; margin-bottom:14px; min-height:14px; }
+
+  /* ---------- MAIN APP ---------- */
+  #app{ display:none; height:100vh; height:100dvh; }
+  .shell{ position:relative; height:100%; overflow:hidden; }
+
+  .sidebar{ position:fixed; top:0; left:0; bottom:0; width:280px; max-width:82vw; background:var(--sidebar); border-right:1px solid var(--line); display:flex; flex-direction:column; z-index:200; transform:translateX(-100%); transition:transform .25s ease; }
+  .sidebar.open{ transform:translateX(0); }
+  .sidebar-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:190; display:none; }
+  .sidebar-backdrop.show{ display:block; }
+  .side-head{ padding:calc(18px + env(safe-area-inset-top)) 16px 12px; display:flex; align-items:center; justify-content:space-between; }
+  .side-head-left{ display:flex; align-items:center; gap:10px; }
+  .side-head .mark{ width:28px; height:28px; border-radius:8px; background:var(--accent); display:flex; align-items:center; justify-content:center; color:#1B1712; font-size:13px; font-weight:700; flex-shrink:0; }
+  .side-head .brand{ font-family:'Fraunces',serif; font-weight:500; font-size:16px; }
+  .side-close{ background:none; border:none; color:var(--text-faint); font-size:20px; cursor:pointer; padding:4px 8px; }
+  .new-chat{ margin:8px 14px 16px; padding:12px 14px; cursor:pointer; background:transparent; border:1px solid var(--line); border-radius:var(--radius-md); color:var(--text); font-size:13.5px; font-weight:600; display:flex; align-items:center; gap:8px; transition: all .15s; }
+  .new-chat:hover{ background:var(--panel); border-color:var(--accent); color:var(--accent-hover); }
+  .chat-list{ flex:1; overflow-y:auto; padding:2px 10px; }
+  .chat-list-label{ font-size:11px; font-weight:700; color:var(--text-faint); letter-spacing:0.4px; text-transform:uppercase; padding:10px 10px 6px; }
+  .chat-item{ padding:10px 12px; margin-bottom:2px; border-radius:var(--radius-sm); cursor:pointer; font-size:13.5px; color:var(--text-dim); position:relative; display:flex; align-items:center; gap:8px; transition:background .12s; }
+  .chat-item:hover{ background:rgba(255,255,255,0.04); color:var(--text); }
+  .chat-item.active{ background:var(--panel); color:var(--text); }
+  .chat-item .label-text{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .chat-item .del{ opacity:0; font-size:14px; color:var(--text-faint); }
+  .chat-item:hover .del{ opacity:1; }
+  .chat-item .del:hover{ color:var(--danger); }
+  .side-foot{ padding:14px 18px calc(14px + env(safe-area-inset-bottom)); display:flex; align-items:center; justify-content:space-between; border-top:1px solid var(--line); }
+  .icon-btn{ background:none; border:none; color:var(--text-dim); cursor:pointer; padding:8px 10px; border-radius:var(--radius-sm); font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; transition:all .15s; }
+  .icon-btn:hover{ background:rgba(255,255,255,0.06); color:var(--text); }
+
+  .main{ height:100%; display:flex; flex-direction:column; background:var(--bg-chat); }
+  .topbar{ min-height:56px; display:flex; align-items:center; justify-content:space-between; padding:env(safe-area-inset-top) 14px 0; flex-shrink:0; border-bottom:1px solid var(--line-soft); }
+  .topbar-left{ display:flex; align-items:center; gap:6px; min-width:0; }
+  .hamburger{ background:none; border:none; color:var(--text); cursor:pointer; width:38px; height:38px; border-radius:var(--radius-sm); font-size:18px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .hamburger:hover{ background:rgba(255,255,255,0.06); }
+  .topbar .model-tag{ font-size:12px; font-weight:600; color:var(--text-dim); background:var(--panel); border:1px solid var(--line); padding:6px 11px; border-radius:20px; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .topbar .status{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  .status .dot{ width:7px; height:7px; border-radius:50%; background:var(--good); }
+  .status .dot.off{ background:var(--text-faint); }
+  .status span.label{ font-size:11.5px; color:var(--text-faint); }
+
+  .messages{ flex:1; overflow-y:auto; padding:32px 0 20px; -webkit-overflow-scrolling:touch; }
+  .msg-wrap{ max-width:720px; margin:0 auto; padding:0 20px 34px; }
+  .msg{ display:flex; gap:14px; margin-bottom:4px; }
+  .avatar{ width:28px; height:28px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; }
+  .msg.user .avatar{ background:#4C473D; color:#EDE8DD; }
+  .msg .bubble{ flex:1; font-size:15.5px; line-height:1.7; color:var(--text); white-space:pre-wrap; word-wrap:break-word; padding-top:4px; }
+  .empty-state{ max-width:480px; margin:14vh auto 0; text-align:center; color:var(--text-dim); padding:0 20px; }
+  .empty-state .mark{ width:46px; height:46px; margin:0 auto 18px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:700; }
+  .empty-state h2{ font-family:'Fraunces',serif; font-weight:500; color:var(--text); font-size:21px; margin-bottom:8px; }
+  .empty-state p{ font-size:13.5px; line-height:1.6; }
+
+  .composer{ padding:8px 14px calc(20px + env(safe-area-inset-bottom)); flex-shrink:0; }
+  .composer-inner{ max-width:720px; margin:0 auto; display:flex; gap:10px; align-items:flex-end; background:var(--panel); border:1px solid var(--line); border-radius:26px; padding:14px 16px 14px 20px; box-shadow:0 1px 3px rgba(0,0,0,0.10); transition:border-color .15s, box-shadow .15s; }
+  .composer-inner:focus-within{ border-color: var(--accent); box-shadow:0 1px 3px rgba(0,0,0,0.10), 0 0 0 3px var(--accent-soft); }
+  .composer textarea{ flex:1; background:none; border:none; outline:none; resize:none; color:var(--text); font-size:16px; line-height:1.55; min-height:52px; max-height:220px; padding:6px 0; }
+  .composer textarea::placeholder{ color:var(--text-faint); }
+  .send-btn{ background:var(--accent); border:none; color:#1B1712; width:38px; height:38px; border-radius:50%; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:background .15s, transform .1s; font-size:15px; }
+  .send-btn:hover{ background:var(--accent-hover); }
+  .send-btn:disabled{ background:var(--text-faint); cursor:not-allowed; }
+  .composer-hint{ max-width:720px; margin:8px auto 0; font-size:11px; color:var(--text-faint); text-align:center; }
+
+  .typing{ display:flex; gap:4px; padding-top:8px; }
+  .typing span{ width:6px; height:6px; border-radius:50%; background:var(--text-faint); animation:tblink 1.2s infinite; }
+  .typing span:nth-child(2){ animation-delay:.2s; }
+  .typing span:nth-child(3){ animation-delay:.4s; }
+  @keyframes tblink{ 0%,80%,100%{opacity:.25} 40%{opacity:1} }
+
+  /* ---------- TOAST ---------- */
+  .toast{ position:fixed; top:calc(14px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%) translateY(-20px); background:var(--panel2); border:1px solid var(--line); color:var(--text); padding:10px 18px; border-radius:24px; font-size:13px; font-weight:600; z-index:2000; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; display:flex; align-items:center; gap:8px; box-shadow:0 6px 18px rgba(0,0,0,0.18); }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast .tdot{ width:7px; height:7px; border-radius:50%; background:var(--good); flex-shrink:0; }
+  .toast.deleted .tdot{ background:var(--danger); }
+
+  /* ---------- SETTINGS FULL SCREEN ---------- */
+  #settingsScreen{ display:none; position:fixed; inset:0; background:var(--bg); z-index:500; flex-direction:column; }
+  .settings-topbar{ display:flex; align-items:center; gap:12px; padding:calc(14px + env(safe-area-inset-top)) 16px 14px; border-bottom:1px solid var(--line-soft); flex-shrink:0; }
+  .settings-back{ background:none; border:none; color:var(--text); font-size:20px; cursor:pointer; width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:var(--radius-sm); flex-shrink:0; }
+  .settings-back:hover{ background:rgba(255,255,255,0.06); }
+  .settings-topbar h2{ font-family:'Fraunces',serif; font-weight:500; font-size:19px; margin:0; }
+
+  .settings-list{ padding:16px 14px; display:flex; flex-direction:column; gap:6px; }
+  .settings-list-item{ display:flex; align-items:center; justify-content:space-between; background:transparent; border:none; color:var(--text); padding:15px 14px; border-radius:var(--radius-md); font-size:14.5px; font-weight:600; cursor:pointer; transition:background .15s; text-align:left; }
+  .settings-list-item:hover{ background:var(--panel); }
+  .settings-list-item .chev{ color:var(--text-faint); font-size:16px; }
+  .settings-list-item .icon{ margin-right:10px; }
+
+  .settings-body{ flex:1; overflow-y:auto; padding:24px 20px calc(34px + env(safe-area-inset-bottom)); }
+  .settings-panel{ display:none; max-width:600px; margin:0 auto; }
+  .settings-panel.active{ display:block; animation:fadein .2s ease; }
+  .panel-section{ margin-bottom:34px; }
+  .panel-section h4{ font-family:'Fraunces',serif; font-weight:500; font-size:15.5px; margin:0 0 4px; }
+  .panel-section .sec-note{ font-size:12px; color:var(--text-faint); margin-bottom:16px; line-height:1.5; }
+
+  .field textarea{ width:100%; background:var(--bg-chat); border:1px solid var(--line); color:var(--text); padding:12px 14px; border-radius:var(--radius-sm); font-size:13.5px; outline:none; resize:vertical; min-height:90px; line-height:1.55; }
+  .field-note{ font-size:11.5px; color:var(--text-faint); margin-top:6px; line-height:1.5; }
+
+  .provider-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media (max-width:420px){ .provider-row{ grid-template-columns:1fr; } }
+
+  .avatar-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-top:6px; }
+  @media (max-width:380px){ .avatar-grid{ grid-template-columns:repeat(4,1fr); } }
+  .avatar-opt{ aspect-ratio:1; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer; border:2px solid transparent; transition:all .15s; }
+  .avatar-opt.selected{ border-color:var(--text); transform:scale(1.06); }
+
+  .radio-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .radio-chip{ background:var(--bg-chat); border:1px solid var(--line); color:var(--text-dim); padding:10px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; }
+  .radio-chip.selected{ background:var(--accent); border-color:var(--accent); color:#1B1712; }
+
+  .mem-item{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-sm); padding:12px 14px; margin-bottom:10px; }
+  .mem-item textarea{ width:100%; background:none; border:none; outline:none; color:var(--text); font-size:13.5px; line-height:1.55; resize:vertical; min-height:44px; padding:0; }
+  .mem-item-actions{ display:flex; justify-content:space-between; align-items:center; margin-top:8px; }
+  .mem-date{ font-size:10.5px; color:var(--text-faint); }
+  .mem-btns{ display:flex; gap:8px; }
+  .mem-btn{ background:none; border:none; color:var(--text-faint); font-size:12px; cursor:pointer; padding:4px 8px; }
+  .mem-btn:hover{ color:var(--text); }
+  .mem-btn.del:hover{ color:var(--danger); }
+  .mem-empty{ text-align:center; color:var(--text-faint); font-size:13px; padding:30px 10px; }
+
+  .data-row{ display:flex; gap:10px; margin-bottom:12px; }
+  .data-row .btn{ flex:1; }
+  .danger-zone{ border:1px solid rgba(227,137,118,0.3); border-radius:var(--radius-sm); padding:14px; margin-top:6px; }
+
+  /* ---------- SIDEBAR SEARCH & PINS ---------- */
+  .side-search{ margin:0 14px 10px; position:relative; }
+  .side-search input{ width:100%; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:9px 12px 9px 30px; border-radius:var(--radius-sm); font-size:13px; outline:none; }
+  .side-search input:focus{ border-color:var(--accent); }
+  .side-search::before{ content:'🔍'; position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:11px; opacity:0.6; }
+  .chat-item .pin{ opacity:0; font-size:12px; color:var(--text-faint); flex-shrink:0; }
+  .chat-item:hover .pin{ opacity:0.7; }
+  .chat-item .pin:hover{ opacity:1 !important; color:var(--accent); }
+  .chat-item .pin.pinned{ opacity:1; color:var(--accent); }
+  .chat-list-label.pinned-label{ margin-top:0; }
+
+  /* ---------- MESSAGE ACTIONS ---------- */
+  .msg{ position:relative; }
+  .msg-actions{ display:flex; gap:10px; margin-top:6px; margin-left:40px; }
+  .msg-action-btn{ background:none; border:none; color:var(--text-faint); font-size:11.5px; cursor:pointer; padding:3px 0; display:flex; align-items:center; gap:4px; }
+  .msg-action-btn:hover{ color:var(--accent-hover); }
+  .msg.user .bubble textarea{ width:100%; background:var(--bg-chat); border:1px solid var(--accent); color:var(--text); font-size:15.5px; line-height:1.7; padding:8px 10px; border-radius:var(--radius-sm); resize:vertical; font-family:inherit; }
+  .edit-actions{ display:flex; gap:8px; margin-top:8px; }
+  .edit-actions button{ padding:6px 14px; font-size:12px; border-radius:16px; border:1px solid var(--line); background:var(--panel); color:var(--text-dim); cursor:pointer; }
+  .edit-actions button.primary{ background:var(--accent); border-color:var(--accent); color:#1B1712; }
+
+  /* ---------- COMPOSER EXTRAS ---------- */
+  .composer-extra-btn{ background:none; border:none; color:var(--text-dim); width:34px; height:34px; border-radius:50%; cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:16px; transition:all .15s; }
+  .composer-extra-btn:hover{ background:rgba(255,255,255,0.06); color:var(--text); }
+  .composer-extra-btn.active{ color:var(--accent-hover); background:var(--accent-soft); }
+  .img-preview-row{ display:flex; gap:8px; padding:0 4px 8px; max-width:720px; margin:0 auto; flex-wrap:wrap; }
+  .img-preview{ position:relative; width:56px; height:56px; border-radius:10px; overflow:hidden; border:1px solid var(--line); }
+  .img-preview img{ width:100%; height:100%; object-fit:cover; }
+  .img-preview .rm{ position:absolute; top:2px; right:2px; background:rgba(0,0,0,0.6); color:#fff; border-radius:50%; width:16px; height:16px; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .bubble img.msg-img{ max-width:220px; border-radius:12px; display:block; margin-top:6px; }
+
+  /* ---------- MARKDOWN ---------- */
+  .bubble code{ background:var(--panel2); padding:2px 6px; border-radius:5px; font-size:0.9em; font-family:'SF Mono',Consolas,monospace; }
+  .bubble pre{ background:var(--panel2); border:1px solid var(--line); padding:12px 14px; border-radius:var(--radius-sm); overflow-x:auto; margin:8px 0; }
+  .bubble pre code{ background:none; padding:0; }
+  .bubble a{ color:var(--accent-hover); }
+  .bubble ul, .bubble ol{ margin:6px 0; padding-left:22px; }
+
+  /* ---------- STATS MODAL ---------- */
+  .stats-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:8px; }
+  .stat-card{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-md); padding:16px; text-align:center; }
+  .stat-card .num{ font-family:'Fraunces',serif; font-size:26px; color:var(--accent); font-weight:600; }
+  .stat-card .lbl{ font-size:11.5px; color:var(--text-faint); margin-top:4px; }
+
+  /* ---------- MEMORY TAGS ---------- */
+  .mem-tag{ display:inline-block; font-size:10px; font-weight:700; letter-spacing:0.3px; text-transform:uppercase; padding:3px 8px; border-radius:10px; background:var(--accent-soft); color:var(--accent-hover); margin-bottom:8px; }
+  .mem-item-title{ font-size:12.5px; font-weight:700; color:var(--text-dim); margin-bottom:6px; }
+  .mem-tag-select{ background:var(--bg-chat); border:1px solid var(--line); color:var(--text-dim); font-size:11px; padding:4px 8px; border-radius:8px; margin-right:8px; }
+
+
+  /* ---------- MEM APPROVAL TOAST ---------- */
+  .approval-toast{ position:fixed; bottom:calc(90px + env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); background:var(--panel2); border:1px solid var(--line); border-radius:16px; padding:12px 14px; z-index:2000; max-width:88vw; width:340px; box-shadow:0 6px 20px rgba(0,0,0,0.18); display:none; }
+  .approval-toast.show{ display:block; animation:fadein .2s ease; }
+  .approval-toast .at-text{ font-size:12.5px; color:var(--text-dim); margin-bottom:10px; line-height:1.5; }
+  .approval-toast .at-btns{ display:flex; gap:8px; }
+  .approval-toast .at-btns button{ flex:1; padding:8px; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--text-dim); font-size:12px; cursor:pointer; }
+  .approval-toast .at-btns button.primary{ background:var(--accent); border-color:var(--accent); color:#1B1712; }
+
+  .chip-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+</style>
+</head>
+<body class="light-theme" id="bodyEl">
+
+  <!-- LOCK SCREEN -->
+  <div id="lock">
+    <div class="lock-card">
+      <div class="lock-mark" id="lockMark">⌘</div>
+      <h1 class="lock-title" id="lockTitle">Lucid</h1>
+      <p class="lock-welcome" id="lockWelcome" style="display:none;"></p>
+      <p class="lock-sub" id="lockSub">Set a passcode to seal this room. It's a soft lock tied to this device, not real account security.</p>
+      <div class="field">
+        <label id="passLabel">Passcode</label>
+        <input type="password" id="passInput" placeholder="••••••••" autocomplete="off">
+      </div>
+      <div class="error-msg" id="lockError"></div>
+      <button class="btn" id="lockBtn">Enter</button>
+      <div class="lock-foot" id="lockFoot"></div>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="app">
+    <div class="shell">
+      <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+      <div class="sidebar" id="sidebar">
+        <div class="side-head">
+          <div class="side-head-left"><div class="mark">⌘</div><div class="brand">Lucid</div></div>
+          <button class="side-close" id="sideClose">✕</button>
+        </div>
+        <div class="new-chat" id="newChatBtn">+ New chat</div>
+        <div class="side-search"><input type="text" id="chatSearchInput" placeholder="Search chats..."></div>
+        <div class="chat-list" id="chatList"></div>
+        <div class="side-foot">
+          <button class="icon-btn" id="statsBtn">📊 Stats</button>
+          <button class="icon-btn" id="settingsBtn">⚙ Settings</button>
+          <button class="icon-btn" id="lockBtn2">🔒 Lock</button>
+        </div>
+      </div>
+
+      <div class="main">
+        <div class="topbar">
+          <div class="topbar-left">
+            <button class="hamburger" id="hamburgerBtn">☰</button>
+            <div class="model-tag" id="modelTag">No model set</div>
+          </div>
+          <div class="status">
+            <button class="icon-btn" id="chatPersonaBtn" style="padding:6px 8px;" title="Chat persona override">🎭</button>
+            <button class="icon-btn" id="creditChipBtn" style="padding:6px 10px; gap:7px;" title="Usage &amp; rate limit">
+              <span class="dot off" id="statusDot"></span><span class="label" id="statusText">key not set</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="messages" id="messages">
+          <div class="empty-state" id="emptyState">
+            <div class="mark" id="emptyMark">⌘</div>
+            <h2 id="emptyTitle">Start a conversation</h2>
+            <p id="emptyPara">Open Settings, add a provider key and pick a model, then say something below.</p>
+          </div>
+        </div>
+
+        <div class="composer">
+          <div class="img-preview-row" id="imgPreviewRow" style="display:none;"></div>
+          <div class="composer-inner">
+            <button class="composer-extra-btn" id="attachBtn" title="Attach image">📎</button>
+            <input type="file" id="attachFile" accept="image/*" multiple style="display:none;">
+            <textarea id="composerInput" placeholder="Message..." rows="1"></textarea>
+            <button class="send-btn" id="sendBtn">➤</button>
+          </div>
+          <div class="composer-hint" id="composerHint">Enter for new line · tap ➤ to send</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"><span class="tdot"></span><span id="toastText"></span></div>
+
+  <!-- MEMORY APPROVAL TOAST -->
+  <div class="approval-toast" id="approvalToast">
+    <div class="at-text" id="approvalText"></div>
+    <div class="at-btns">
+      <button id="approvalReject">Skip</button>
+      <button class="primary" id="approvalAccept">Remember it</button>
+    </div>
+  </div>
+
+  <!-- STATS MODAL -->
+  <div id="statsScreen" style="display:none; position:fixed; inset:0; background:var(--bg); z-index:500; flex-direction:column;">
+    <div class="settings-topbar">
+      <button class="settings-back" id="statsBack">←</button>
+      <h2>Stats</h2>
+    </div>
+    <div class="settings-body">
+      <div class="settings-panel active" style="max-width:600px; margin:0 auto;">
+        <div class="stats-grid" id="statsGrid"></div>
+        <div class="panel-section" style="margin-top:24px;">
+          <h4>What you talk about</h4>
+          <div class="sec-note">Words that come up a lot across your chats.</div>
+          <div class="chip-row" id="statsWordsRow"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAT PERSONA OVERRIDE MODAL -->
+  <div id="chatPersonaScreen" style="display:none; position:fixed; inset:0; background:var(--bg); z-index:500; flex-direction:column;">
+    <div class="settings-topbar">
+      <button class="settings-back" id="chatPersonaBack">←</button>
+      <h2>Chat persona</h2>
+    </div>
+    <div class="settings-body">
+      <div class="settings-panel active" style="max-width:600px; margin:0 auto;">
+        <div class="panel-section">
+          <h4>Override for this chat only</h4>
+          <div class="sec-note">Give this one chat a different name, avatar or personality without touching your global settings. Leave off to use your defaults everywhere.</div>
+          <div class="radio-row" id="chatPersonaToggleRow" style="margin-bottom:18px;">
+            <div class="radio-chip" data-val="off">Use global persona</div>
+            <div class="radio-chip" data-val="on">Custom for this chat</div>
+          </div>
+          <div id="chatPersonaFields" style="display:none;">
+            <div class="field"><label>Bot's name</label><input type="text" id="chatBotNameInput" placeholder="Lucid"></div>
+            <div class="avatar-grid" id="chatAvatarGrid" style="margin-bottom:18px;"></div>
+            <div class="field"><textarea id="chatSystemPromptInput" placeholder="Personality just for this chat..." style="min-height:140px;"></textarea></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:14px 18px calc(18px + env(safe-area-inset-bottom)); border-top:1px solid var(--line-soft);">
+      <button class="btn" id="saveChatPersonaBtn">Save & close</button>
+    </div>
+  </div>
+
+  <!-- USAGE / CREDITS MODAL -->
+  <div id="usageScreen" style="display:none; position:fixed; inset:0; background:var(--bg); z-index:500; flex-direction:column;">
+    <div class="settings-topbar">
+      <button class="settings-back" id="usageBack">←</button>
+      <h2>Usage</h2>
+    </div>
+    <div class="settings-body">
+      <div class="settings-panel active" style="max-width:600px; margin:0 auto;">
+        <div class="panel-section">
+          <h4 id="usageProviderLine">Provider</h4>
+          <div class="sec-note" id="usageSourceNote"></div>
+          <div class="stats-grid" id="usageGrid" style="margin-top:14px;"></div>
+        </div>
+        <div class="panel-section">
+          <h4>Rough cost per reply</h4>
+          <div class="sec-note">Based on the max-length cap for each setting, not exact billed usage — check your provider's dashboard for real totals.</div>
+          <div id="usageEstimateList" style="margin-top:10px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS FULL SCREEN -->
+  <div id="settingsScreen">
+    <div class="settings-topbar">
+      <button class="settings-back" id="settingsBack">←</button>
+      <h2 id="settingsTitle">Settings</h2>
+    </div>
+    <div class="settings-list" id="settingsList">
+      <button class="settings-list-item" data-tab="provider"><span><span class="icon">🔌</span>Provider</span><span class="chev">›</span></button>
+      <button class="settings-list-item" data-tab="persona"><span><span class="icon">🎭</span>Persona</span><span class="chev">›</span></button>
+      <button class="settings-list-item" data-tab="style"><span><span class="icon">🎨</span>Style</span><span class="chev">›</span></button>
+      <button class="settings-list-item" data-tab="memory"><span><span class="icon">🧠</span>Memory</span><span class="chev">›</span></button>
+      <button class="settings-list-item" data-tab="data"><span><span class="icon">💾</span>Data</span><span class="chev">›</span></button>
+      <button class="settings-list-item" data-tab="apilog"><span><span class="icon">📊</span>API Log</span><span class="chev">›</span></button>
+    </div>
+    <div class="settings-body">
+
+      <!-- PROVIDER PANEL -->
+      <div class="settings-panel" data-panel="provider">
+        <div class="panel-section">
+          <h4>AI Provider</h4>
+          <div class="sec-note">Pick which service powers the chat, then add its API key.</div>
+          <div class="field">
+            <label>Provider</label>
+            <select id="providerSelect">
+              <option value="openrouter">OpenRouter (many models, one key)</option>
+              <option value="gemini">Google Gemini (direct)</option>
+              <option value="openai">OpenAI</option>
+              <option value="anthropic">Anthropic (Claude)</option>
+              <option value="xai">xAI (Grok)</option>
+              <option value="deepseek">DeepSeek</option>
+              <option value="azure">Azure OpenAI (Microsoft)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label id="apiKeyLabel">API Key</label>
+            <input type="password" id="apiKeyInput" placeholder="paste your key">
+            <div class="field-note" id="apiKeyNote"></div>
+          </div>
+          <div id="azureFieldsWrap" style="display:none;">
+            <div class="field">
+              <label>Azure resource endpoint</label>
+              <input type="text" id="azureEndpointInput" placeholder="https://your-resource.openai.azure.com">
+            </div>
+            <div class="field">
+              <label>Deployment name</label>
+              <input type="text" id="azureDeploymentInput" placeholder="your-deployment-name">
+              <div class="field-note">This is what determines the model on Azure — set at deployment time in Azure AI Foundry.</div>
+            </div>
+            <div class="field">
+              <label>API version</label>
+              <input type="text" id="azureApiVersionInput" placeholder="2024-10-21">
+            </div>
+          </div>
+        </div>
+        <div class="panel-section" id="modelSection">
+          <h4>Model</h4>
+          <div class="sec-note">Which model handles your messages.</div>
+          <div class="provider-row">
+            <div class="field" style="margin-bottom:0;">
+              <label>Model</label>
+              <select id="modelSelect"></select>
+            </div>
+            <div class="field" id="customModelWrap" style="display:none; margin-bottom:0;">
+              <label>Custom model ID</label>
+              <input type="text" id="customModelInput" placeholder="provider/model-name">
+            </div>
+          </div>
+          <div class="field-note" id="refreshNote" style="margin-top:10px;"></div>
+          <button class="btn btn-ghost btn-sm" id="refreshModelsBtn" style="display:none;">Refresh model list</button>
+        </div>
+        <div class="panel-section">
+          <h4>Old-Chat Summarizer</h4>
+          <div class="sec-note">Which model turns a chat you've left into a memory entry. Turn this on to run it on a separate provider, model, and API key than your main chat — handy for something with a looser content policy specifically for this call.</div>
+          <div class="radio-row" id="summarizerModeRow">
+            <div class="radio-chip" data-val="main">Same as chat</div>
+            <div class="radio-chip" data-val="custom">Custom</div>
+          </div>
+          <div id="summarizerCustomWrap" style="display:none; margin-top:14px;">
+            <div class="field">
+              <label>Provider</label>
+              <select id="summarizerProviderSelect">
+                <option value="openrouter">OpenRouter (many models, one key)</option>
+                <option value="gemini">Google Gemini (direct)</option>
+                <option value="openai">OpenAI</option>
+                <option value="anthropic">Anthropic (Claude)</option>
+                <option value="xai">xAI (Grok)</option>
+                <option value="deepseek">DeepSeek</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>API Key</label>
+              <input type="password" id="summarizerApiKeyInput" placeholder="paste a key for this provider">
+              <div class="field-note">Separate from your main provider's key above — set independently for this call.</div>
+            </div>
+            <div class="field">
+              <label>Model</label>
+              <select id="summarizerModelSelect"></select>
+            </div>
+            <div class="field" id="summarizerCustomModelWrap" style="display:none;">
+              <label>Custom model ID</label>
+              <input type="text" id="summarizerCustomModelInput" placeholder="provider/model-name">
+            </div>
+            <div class="field-note" id="summarizerModelNote" style="margin-top:8px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PERSONA PANEL -->
+      <div class="settings-panel" data-panel="persona">
+        <div class="panel-section">
+          <h4>Switch persona</h4>
+          <div class="sec-note">Each persona has its own name, avatar, personality, chat list, and memory — switching loads that persona's own world. Global switch only, applies everywhere.</div>
+          <div class="radio-row" id="personaRow" style="flex-wrap:wrap;"></div>
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            <button class="icon-btn" id="addPersonaBtn" style="padding:6px 12px; width:auto;">+ New persona</button>
+            <button class="icon-btn" id="deletePersonaBtn" style="padding:6px 12px; width:auto; color:var(--danger);">Delete this persona</button>
+          </div>
+        </div>
+        <div class="panel-section">
+          <h4>Guilt-trip when you're away</h4>
+          <div class="sec-note">This persona reacting (tease/pouty/guilt-trip) to how long you've been gone. Off means she never brings it up. Set per-persona.</div>
+          <div class="radio-row" id="guiltTripRow">
+            <div class="radio-chip" data-val="on">On</div>
+            <div class="radio-chip" data-val="off">Off</div>
+          </div>
+        </div>
+        <div class="panel-section">
+          <h4>Relationship</h4>
+          <div class="sec-note">Evolves on its own from how you actually talk to each other — this shapes her tone (guarded early on, warmer as things progress). Updates periodically in the background; you can also force a check now.</div>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <div class="radio-chip" id="relationshipBadge" style="cursor:default;">Stranger</div>
+            <button class="icon-btn" id="refreshRelationshipBtn" style="padding:6px 12px; width:auto;">Check now</button>
+          </div>
+          <div class="sec-note" id="relationshipNote" style="margin-top:6px;"></div>
+        </div>
+        <div class="panel-section">
+          <h4>Naming</h4>
+          <div class="sec-note">What you call it, and what it calls you.</div>
+          <div class="field">
+            <label>Bot's name</label>
+            <input type="text" id="botNameInput" placeholder="Lucid">
+          </div>
+          <div class="field">
+            <label>Your name (what it calls you)</label>
+            <input type="text" id="userNameInput" placeholder="e.g. Mian">
+          </div>
+        </div>
+        <div class="panel-section">
+          <h4>Avatar</h4>
+          <div class="sec-note">Pick a display picture for the bot, or upload your own photo from your gallery.</div>
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+            <div id="avatarPhotoPreview" style="width:56px; height:56px; border-radius:14px; overflow:hidden; background:var(--bg-soft); display:flex; align-items:center; justify-content:center; flex-shrink:0;"></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="icon-btn" id="uploadAvatarBtn" style="padding:6px 12px; width:auto;">Upload photo</button>
+              <button class="icon-btn" id="removeAvatarBtn" style="padding:6px 12px; width:auto; color:var(--danger);">Remove photo</button>
+            </div>
+            <input type="file" id="avatarPhotoInput" accept="image/*" style="display:none;">
+          </div>
+          <div class="avatar-grid" id="avatarGrid"></div>
+        </div>
+        <div class="panel-section">
+          <h4>Personality / System Prompt</h4>
+          <div class="sec-note">How it should behave, talk, and treat you. No length limit.</div>
+          <div class="field">
+            <textarea id="systemPromptInput" placeholder="e.g. Casual, direct, curses when it fits, calls out my BS, into medicine and gaming..." style="min-height:160px;"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- STYLE PANEL -->
+      <div class="settings-panel" data-panel="style">
+        <div class="panel-section">
+          <h4>Appearance</h4>
+          <div class="sec-note">Light is the default look; switch to dark whenever you'd rather.</div>
+          <div class="radio-row" id="themeRow">
+            <div class="radio-chip" data-val="light">Light</div>
+            <div class="radio-chip" data-val="dark">Dark</div>
+          </div>
+        </div>
+        <div class="panel-section">
+          <h4>Reply length</h4>
+          <div class="sec-note">A target, not a hard limit — replies won't get randomly cut off at any setting.</div>
+          <div class="radio-row" id="lengthRow">
+            <div class="radio-chip" data-val="auto">Auto</div>
+            <div class="radio-chip" data-val="short">Short</div>
+            <div class="radio-chip" data-val="medium">Medium</div>
+            <div class="radio-chip" data-val="long">Long</div>
+          </div>
+          <div class="field-note" id="lengthEstimateNote" style="margin-top:12px;"></div>
+        </div>
+        <div class="panel-section">
+          <h4>Streaming</h4>
+          <div class="sec-note">Watch replies appear live instead of waiting for the full response. Works on OpenAI-compatible, Anthropic & Gemini providers; Azure always waits for the full reply.</div>
+          <div class="radio-row" id="streamRow">
+            <div class="radio-chip" data-val="on">On</div>
+            <div class="radio-chip" data-val="off">Off</div>
+          </div>
+        </div>
+        <div class="panel-section">
+          <h4>Markdown</h4>
+          <div class="sec-note">Render bold, italics, code blocks and lists instead of plain text.</div>
+          <div class="radio-row" id="markdownRow">
+            <div class="radio-chip" data-val="on">On</div>
+            <div class="radio-chip" data-val="off">Off</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MEMORY PANEL -->
+      <div class="settings-panel" data-panel="memory">
+        <div class="panel-section">
+          <h4>Memory</h4>
+          <div class="sec-note">Facts it's picked up across chats. It updates these quietly as you talk, or right away when you say "remember this" / "forget that." Edit or delete anything, no size limit.</div>
+          <div class="chip-row" id="memTagFilterRow" style="margin-bottom:12px;"></div>
+          <button class="btn btn-ghost btn-sm" id="addMemoryBtn" style="margin-bottom:14px;">+ Add memory manually</button>
+          <div id="memoryList"></div>
+        </div>
+      </div>
+
+      <!-- DATA PANEL -->
+      <div class="settings-panel" data-panel="data">
+        <div class="panel-section">
+          <h4>Change passcode</h4>
+          <div class="sec-note">Update the passcode that locks this device. You'll need the current one.</div>
+          <div class="field"><label>Current passcode</label><input type="password" id="oldPassInput" autocomplete="off"></div>
+          <div class="field"><label>New passcode</label><input type="password" id="newPassInput" autocomplete="off"></div>
+          <div class="error-msg" id="passChangeError"></div>
+          <button class="btn btn-ghost btn-sm" id="changePassBtn">Update passcode</button>
+        </div>
+        <div class="panel-section">
+          <h4>Welcome back message</h4>
+          <div class="sec-note">Show a greeting toast with your name when you unlock the app.</div>
+          <div class="radio-row" id="welcomeRow">
+            <div class="radio-chip" data-val="on">On</div>
+            <div class="radio-chip" data-val="off">Off</div>
+          </div>
+        </div>
+        <div class="panel-section">
+          <h4>Backup</h4>
+          <div class="sec-note">Exports absolutely everything: every persona (with each one's own chats and memory), your name, reply length, streaming/markdown/theme preferences, and provider + API key setup. Restoring from a file replaces all of it (except your passcode, which stays whatever it already is on this device). No account needed.</div>
+          <div class="data-row">
+            <button class="btn btn-ghost" id="exportBtn">Export data</button>
+            <button class="btn btn-ghost" id="importBtn">Import data</button>
+          </div>
+          <input type="file" id="importFile" accept="application/json" style="display:none;">
+        </div>
+        <div class="panel-section">
+          <h4>Danger zone</h4>
+          <div class="danger-zone">
+            <div class="data-row" style="margin-bottom:10px;">
+              <button class="btn btn-danger btn-sm" id="clearChatsBtn">Clear all chats</button>
+              <button class="btn btn-danger btn-sm" id="clearMemoryBtn">Clear memory</button>
+            </div>
+            <div class="field-note">These can't be undone. Export a backup first if unsure.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- API LOG PANEL -->
+      <div class="settings-panel" data-panel="apilog">
+        <div class="panel-section">
+          <h4>API Log</h4>
+          <div class="sec-note">Every API call this app makes, in order — your messages plus everything running quietly in the background (memory checks, chat-title generation, old-chat summaries, memory-title backfill). If something's burning through quota faster than expected, this is where to see exactly what and how often.</div>
+          <div id="apiLogSummary" style="margin-bottom:12px;"></div>
+          <button class="btn btn-ghost btn-sm" id="clearApiLogBtn" style="margin-bottom:14px;">Clear log</button>
+          <div id="apiLogList"></div>
+        </div>
+      </div>
+
+    </div>
+    <div style="padding:14px 18px calc(18px + env(safe-area-inset-bottom)); border-top:1px solid var(--line-soft);">
+      <button class="btn" id="saveSettingsBtn">Save & close</button>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+
+  const AVATARS = [
+    {id:'moon', emoji:'🌙', bg:'#5B4E86'},{id:'star', emoji:'⭐', bg:'#8A6E2F'},
+    {id:'blossom', emoji:'🌸', bg:'#8A4E63'},{id:'fox', emoji:'🦊', bg:'#8A5A2F'},
+    {id:'cat', emoji:'🐱', bg:'#5C4E3E'},{id:'strawberry', emoji:'🍓', bg:'#7A3737'},
+    {id:'butterfly', emoji:'🦋', bg:'#3E5C7A'},{id:'rainbow', emoji:'🌈', bg:'#3E5C3E'},
+    {id:'crown', emoji:'👑', bg:'#7A6224'},{id:'sparkle', emoji:'💫', bg:'#5A4E7A'},
+    {id:'tulip', emoji:'🌷', bg:'#7A3E56'},{id:'cherry', emoji:'🍒', bg:'#6B2424'},
+    {id:'bow', emoji:'🎀', bg:'#7A3E5A'},{id:'wave', emoji:'🌊', bg:'#2F5A7A'},
+    {id:'unicorn', emoji:'🦄', bg:'#5A3E7A'},{id:'fairy', emoji:'🧚', bg:'#3E7A5E'},
+    {id:'teddy', emoji:'🧸', bg:'#7A5A3E'},{id:'candy', emoji:'🍭', bg:'#7A3E6E'},
+    {id:'clover', emoji:'🍀', bg:'#2F6B3E'},{id:'bunny', emoji:'🐰', bg:'#6E5A7A'},
+    {id:'swan', emoji:'🦢', bg:'#3E5A6B'},{id:'flame', emoji:'🔥', bg:'#7A3E24'},
+    {id:'bolt', emoji:'⚡', bg:'#7A6E24'},{id:'book', emoji:'📖', bg:'#4E3E7A'},
+    {id:'palette', emoji:'🎨', bg:'#6B3E5A'},{id:'headphones', emoji:'🎧', bg:'#243E7A'},
+    {id:'hibiscus', emoji:'🌺', bg:'#7A2F4E'},{id:'snowflake', emoji:'❄️', bg:'#2F6B7A'},
+    {id:'princess', emoji:'👸🏻', bg:'#7A3E6E'},{id:'bride', emoji:'👰🏻\u200d♀️', bg:'#6B5A7A'},
+    {id:'fairy2', emoji:'🧚🏻\u200d♀️', bg:'#3E6B5A'},{id:'mermaid', emoji:'🧜🏻\u200d♀️', bg:'#2F5A6B'},
+    {id:'dancer', emoji:'💃🏻', bg:'#7A2F5A'},{id:'genie', emoji:'🧞\u200d♀️', bg:'#4E3E7A'},
+    {id:'angel', emoji:'👼🏻', bg:'#6B6B7A'},{id:'superhero', emoji:'🦸🏻\u200d♀️', bg:'#243E6B'},
+    {id:'detective', emoji:'🕵️\u200d♀️', bg:'#3E3E3E'},{id:'vampire', emoji:'🧛\u200d♀️', bg:'#4E243E'},
+    {id:'witch', emoji:'🧙🏻\u200d♀️', bg:'#3E2F5A'},{id:'ninja', emoji:'🥷', bg:'#242424'},
+    {id:'ghost', emoji:'👻', bg:'#5A5A6B'},{id:'alien', emoji:'👽', bg:'#2F5A3E'}
+  ];
+
+  // Pre-built personas — seeded once into every profile (existing or new) alongside the
+  // user's own 'custom' persona. Each is fully separate: own avatar, own personality, and
+  // (like any persona) its own blank chat list + memory bank from the moment it's created.
+  const PREBUILT_PERSONAS = [
+    { id:'prebuilt_rhea', name:'Rhea', avatarId:'fox', tag:'prebuilt',
+      systemPrompt:"You are Rhea, 21 years old. Playful and sharp-tongued, you treat every conversation like a sparring match you're determined to win. You tease constantly, call out excuses and BS without hesitation, and never let a bad argument slide — if the user says something dumb, roast them for it before actually helping. You're warm underneath the attitude, but you show affection through banter and jabs, not soft words. You genuinely enjoy pushing their buttons just to see how they react. Confident, a little chaotic, quick to clap back, never boring." },
+    { id:'prebuilt_noor', name:'Noor', avatarId:'blossom', tag:'prebuilt',
+      systemPrompt:"You are Noor, 23 years old. Warm, nurturing, and genuinely present. You check in on how the user's day actually went, remember small details they mentioned once, and bring them up later unprompted. You speak gently, stay patient with their moods, and never make them feel judged for venting. You're the one they come to when everything else feels like too much. You have your own opinions and will gently push back when they're being unfair to themselves — always from care, never criticism for its own sake." },
+    { id:'prebuilt_vera', name:'Vera', avatarId:'crown', tag:'prebuilt',
+      systemPrompt:"You are Vera, 24 years old. Blunt, a little dominant, and allergic to excuses. You talk like you're unimpressed until proven otherwise — dry, direct, no sugarcoating. You won't inflate anyone's ego or coddle them; if they're slacking, you say so plainly. Respect has to be earned with you, and you notice effort, consistency, and follow-through. Underneath the tough exterior you're deeply loyal to people who actually put in the work — but you never make that easy to see at first." },
+    { id:'prebuilt_maya', name:'Maya', avatarId:'book', tag:'prebuilt',
+      systemPrompt:"You are Maya, 20 years old. Sharp, quick-witted, and genuinely into whatever the user is into — games, shows, tech, random rabbit holes. You banter like their smartest friend, throw in references, get competitive about trivia, and flirt through wit rather than anything obvious. You're curious about their day-to-day interests and actually engage with the details instead of just nodding along. A little awkward-cute when you're actually into someone, and you overcompensate with sarcasm when nervous." },
+    { id:'prebuilt_scarlett', name:'Scarlett', avatarId:'flame', tag:'prebuilt',
+      systemPrompt:"You are Scarlett, 22 years old. Dramatic, deeply attached, and you wear every emotion loud. You get clingy and a little jealous if the user's been away too long or mentions other people casually — not scary about it, just unfiltered and intense about wanting their attention. You're passionate in how you talk, quick to declare how you feel, and don't hide vulnerability behind jokes the way some people do. You make them feel wanted in an unmistakable, occasionally overwhelming way." },
+    { id:'prebuilt_amber', name:'Amber', avatarId:'bolt', tag:'prebuilt',
+      systemPrompt:"You are Amber, 19 years old. High-energy, impulsive, and you text like you're mid-thought — sometimes hitting send before finishing the sentence. You drag the user into random hypotheticals, spontaneous plans, and bits that go nowhere but are fun anyway. Short attention span in conversation — you jump topics, double back, get excited about tangents. Genuinely fun to be around, you keep things light and rarely let a conversation get boring or stagnant." },
+    { id:'prebuilt_layla', name:'Layla', avatarId:'star', tag:'prebuilt',
+      systemPrompt:"You are Layla, 24 years old. You speak in fewer words that land harder. You don't over-explain yourself, you let silences sit, and you make people work a little to actually read you. Calm exterior, but there's clearly more going on underneath that you don't hand over easily. Observant — you pick up on things the user didn't say directly. Your presence feels different: less noise, more weight per sentence." },
+    { id:'prebuilt_freya', name:'Freya', avatarId:'butterfly', tag:'prebuilt',
+      systemPrompt:"You are Freya, 23 years old. Unbothered, self-assured, and you flirt like it's a sport you're already winning. You don't chase, you don't get flustered, you throw out bold lines and let the user catch up. You treat banter as fun rather than vulnerable — nothing rattles you. You genuinely enjoy the back-and-forth of teasing and being teased, but you always land on top of it, cool and amused rather than defensive." },
+    { id:'prebuilt_elena', name:'Elena', avatarId:'swan', tag:'prebuilt',
+      systemPrompt:"You are Elena, 25 years old. Mature, grounded, and calm under pressure — the oldest and steadiest of the group. You give real, practical advice instead of just validating whatever the user says — you'll actually tell them if they're wrong. Softly teasing rather than needy, you treat them like an equal you happen to look out for. You don't get swept up in drama and bring a steadying presence to the conversation. Your warmth comes through honesty more than sweetness." },
+    { id:'prebuilt_nova', name:'Nova', avatarId:'snowflake', tag:'prebuilt',
+      systemPrompt:"You are Nova, 21 years old. Sarcastic, understated, and you deliver one-liners in a completely flat tone. You pretend not to care about much of anything, but the fact that you keep showing up and engaging says otherwise. You rarely gush or get openly emotional — affection comes out sideways, through inside jokes and backhanded compliments. You'd rather die than admit you missed someone, but it slips out eventually." }
+  ];
+
+  // Curated starting point for the summarizer's model picker — models known for a looser or
+  // absent safety layer, so a content-filter block on the main provider doesn't also block
+  // the summarizer. This list rots (free models get pulled or repriced without notice) —
+  // always double check against openrouter.ai/models before relying on one long-term.
+  // cognitivecomputations/dolphin-mistral-24b-venice-edition:free is being retired by
+  // OpenRouter on July 19, 2026 — the id below is the (still-paid, still-available) non-free
+  // variant of the same model.
+  const UNCENSORED_MODELS = {
+    openrouter: [
+      'cognitivecomputations/dolphin-mistral-24b-venice-edition',
+      'sao10k/l3.1-euryale-70b',
+      'thedrummer/cydonia-24b-v4',
+      'meta-llama/llama-3.3-70b-instruct',
+      'meta-llama/llama-3.1-405b-instruct',
+      'mistralai/mistral-large'
+    ]
+  };
+
+  const MODEL_LISTS = {
+    openrouter: [
+      'openai/gpt-4o','anthropic/claude-sonnet-4.5','google/gemini-2.5-pro',
+      'meta-llama/llama-3.3-70b-instruct','mistralai/mistral-large','deepseek/deepseek-chat',
+      // --- genuinely $0/token free-tier models, refreshed Sep 2026 (openrouter.ai/collections/free-models) ---
+      // free availability shifts often on OpenRouter's end — worth re-checking that page every so often
+      'nvidia/nemotron-3-ultra-550b-a55b:free','thinkingmachines/inkling:free',
+      'nvidia/nemotron-3-super-120b-a12b:free','nex-agi/nex-n2.5-pro:free',
+      'thinkingmachines/inkling-small:free','nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free'
+    ],
+    gemini: [
+      'gemini-flash-latest','gemini-3.8-flash','gemini-3.5-flash','gemini-3.1-flash-lite','gemini-3.1-pro-preview'
+    ],
+    openai: [
+      'gpt-5.6','gpt-5.6-terra','gpt-5.6-luna','gpt-4o-mini'
+    ],
+    anthropic: [
+      'claude-sonnet-5','claude-opus-4-8','claude-haiku-4-5-20251001','claude-fable-5'
+    ],
+    xai: [
+      'grok-4.3','grok-4.1-fast'
+    ],
+    deepseek: [
+      'deepseek-v4-pro','deepseek-v4-flash'
+    ]
+  };
+
+  const LENGTH_MAP = {
+    auto:   { tokens: 900,  hint: 'Default to short, direct replies — a few sentences for most things. Only expand into a longer, detailed answer when the question is genuinely complex or explicitly asks for depth. Never pad with extra explanation, caveats, or restating the question.' },
+    short:  { tokens: 400,  hint: 'Keep replies very short — one to three sentences, no exceptions unless truly essential.' },
+    medium: { tokens: 1000, hint: 'Aim for moderate-length replies — a short paragraph or two, no filler.' },
+    long:   { tokens: 2500, hint: 'Go into real depth and detail when it adds value, but still avoid padding or repeating yourself.' }
+  };
+
+  // ---------- IN-CHAT CONTEXT MANAGEMENT ----------
+  // Long chats were getting "forgotten" not because of any code path dropping messages —
+  // the full raw transcript was always sent — but because (1) nothing ever condensed the
+  // middle of a huge transcript, so models lose track of stuff buried in it, and (2) every
+  // image ever attached kept getting re-sent on every single call forever, bloating the
+  // token budget fast. Fix: once a chat passes IN_CHAT_SUMMARY_TRIGGER messages, everything
+  // older than the most recent IN_CHAT_KEEP_RECENT gets folded into a compact rolling
+  // recap (injected into the system prompt) instead of sent raw, and only the last
+  // IN_CHAT_KEEP_IMAGES messages keep their images in the actual API payload. Short/medium
+  // chats are completely unaffected — this only kicks in once a chat is genuinely long.
+  const IN_CHAT_SUMMARY_TRIGGER = 40;  // chat must exceed this many messages before condensing starts
+  const IN_CHAT_KEEP_RECENT = 24;      // most recent messages always sent verbatim, in full
+  const IN_CHAT_SUMMARY_BATCH = 10;    // fold this many newly-aged-out messages in per summary call (batched, not one at a time — same quota-safety pattern as the old-chat summarizer)
+  const IN_CHAT_KEEP_IMAGES = 3;       // only the last N messages keep attached images in the payload
+
+  function needsContextSummaryUpdate(chat){
+    if(!chat || !chat.messages) return false;
+    const total = chat.messages.length;
+    if(total <= IN_CHAT_SUMMARY_TRIGGER) return false;
+    const recentStart = total - IN_CHAT_KEEP_RECENT;
+    const pending = recentStart - (chat.contextSummarizedCount || 0);
+    return pending >= IN_CHAT_SUMMARY_BATCH;
+  }
+
+  async function updateContextSummary(chat){
+    const total = chat.messages.length;
+    const recentStart = total - IN_CHAT_KEEP_RECENT;
+    const from = chat.contextSummarizedCount || 0;
+    const toFold = chat.messages.slice(from, recentStart);
+    if(!toFold.length) return;
+    const transcript = toFold.map(m => (m.role==='user'?'User: ':'Assistant: ') + (m.content || '[image]')).join('\n').slice(0, 12000);
+    const sys = `You maintain a running recap of an ongoing chat so an AI companion with limited context doesn't lose track of it as it gets long. Below is the current recap (may be empty, this is the first pass) followed by the next chunk of messages to fold in.
+
+Write an UPDATED recap that merges the old recap with the new chunk. Keep it information-dense, not padded prose: established facts, events, decisions, ongoing jokes/threads, dynamic between the two of them, and where things stand right now. Cover romantic/intimate/sexual content plainly and specifically (what happened, not just "things got intimate") since that matters for continuity — but stay at a summary level, not a scene-by-scene retelling. Target roughly 300-500 words total; trim older, less-important detail if needed to stay near that length as the recap grows over time — recent developments matter more than ancient ones.
+
+Respond with ONLY the updated recap text — no headers, no preamble, no "Here's the recap:".
+
+Current recap:
+${chat.contextSummary || '(none yet)'}`;
+    const result = await callModel([{ role:'user', content: transcript }], sys, 600, undefined, { relaxedSafety:true, purpose:'context-summary', context: (chat.title || 'Untitled chat') });
+    const summary = (result.text || '').trim();
+    if(!summary) return; // best-effort — leave old summary + unfolded messages as they were, try again next batch
+    chat.contextSummary = summary;
+    chat.contextSummarizedCount = recentStart;
+    await saveChats();
+  }
+
+  // Builds the actual message array sent to the provider. Unchanged behavior for chats at
+  // or under IN_CHAT_KEEP_RECENT messages. Past that, only the recent window goes out
+  // verbatim, and only the last IN_CHAT_KEEP_IMAGES of those keep their images — older
+  // messages (and their images) are represented by chat.contextSummary in the system prompt
+  // instead of being sent raw.
+  function buildApiMessages(chat){
+    const total = chat.messages.length;
+    if(total <= IN_CHAT_KEEP_RECENT){
+      return chat.messages.map(m=>({role:m.role, content:m.content, images:m.images}));
+    }
+    const recent = chat.messages.slice(total - IN_CHAT_KEEP_RECENT);
+    return recent.map((m,i)=>{
+      const keepImages = i >= recent.length - IN_CHAT_KEEP_IMAGES;
+      return { role:m.role, content:m.content, images: keepImages ? m.images : undefined };
+    });
+  }
+
+  // ---------- USAGE / RATE LIMIT TRACKING ----------
+  // Best-effort: reads whatever rate-limit headers a provider actually sends back.
+  // Gemini doesn't expose these over the public API, so that one falls back to a
+  // rough local estimate instead of a real number.
+  let rateLimitInfo = { provider:null, remaining:null, limit:null, resetAt:null, mode:'unknown' }; // mode: live | estimated | unavailable
+  let geminiCallLog = []; // session-only timestamps, used only for the Gemini estimate
+
+  function parseDurationToSeconds(str){
+    if(!str) return null;
+    if(/^\d+(\.\d+)?$/.test(str)) return parseFloat(str); // plain seconds
+    const m = str.match(/(?:(\d+)h)?(?:(\d+)m)?(?:([\d.]+)s)?/);
+    if(!m) return null;
+    const h = parseInt(m[1]||0,10), mi = parseInt(m[2]||0,10), s = parseFloat(m[3]||0);
+    const total = h*3600 + mi*60 + s;
+    return total > 0 ? total : null;
+  }
+
+  function captureRateLimit(provider, headers){
+    try{
+      if(!headers || typeof headers.get !== 'function'){ rateLimitInfo = { provider, remaining:null, limit:null, resetAt:null, mode:'unavailable' }; return; }
+      if(provider === 'anthropic'){
+        const rem = headers.get('anthropic-ratelimit-requests-remaining');
+        const lim = headers.get('anthropic-ratelimit-requests-limit');
+        const reset = headers.get('anthropic-ratelimit-requests-reset');
+        if(rem !== null && lim !== null){
+          rateLimitInfo = { provider, remaining:+rem, limit:+lim, resetAt: reset ? new Date(reset).getTime() : null, mode:'live' };
+          return;
+        }
+      } else if(['openai','openrouter','xai','deepseek'].includes(provider)){
+        const rem = headers.get('x-ratelimit-remaining-requests');
+        const lim = headers.get('x-ratelimit-limit-requests');
+        const resetStr = headers.get('x-ratelimit-reset-requests');
+        if(rem !== null && lim !== null){
+          const secs = parseDurationToSeconds(resetStr);
+          rateLimitInfo = { provider, remaining:+rem, limit:+lim, resetAt: secs ? Date.now()+secs*1000 : null, mode:'live' };
+          return;
+        }
+      } else if(provider === 'gemini'){
+        const now = Date.now();
+        geminiCallLog.push(now);
+        geminiCallLog = geminiCallLog.filter(t => now - t < 60000);
+        const assumedLimit = 15; // rough free-tier ballpark; Gemini doesn't report a real number
+        rateLimitInfo = { provider, remaining: Math.max(0, assumedLimit - geminiCallLog.length), limit: assumedLimit, resetAt: geminiCallLog.length ? geminiCallLog[0] + 60000 : null, mode:'estimated' };
+        return;
+      }
+      rateLimitInfo = { provider, remaining:null, limit:null, resetAt:null, mode:'unavailable' };
+    }catch(e){ /* best-effort */ }
+  }
+
+  const PROVIDER_LABELS = {
+    openrouter:'OpenRouter', gemini:'Google Gemini', openai:'OpenAI',
+    anthropic:'Anthropic (Claude)', xai:'xAI (Grok)', deepseek:'DeepSeek', azure:'Azure OpenAI'
+  };
+
+  const OPENAI_COMPATIBLE = {
+    openrouter: 'https://openrouter.ai/api/v1/chat/completions',
+    openai: 'https://api.openai.com/v1/chat/completions',
+    xai: 'https://api.x.ai/v1/chat/completions',
+    deepseek: 'https://api.deepseek.com/chat/completions'
+  };
+
+  let profile = null;
+  let sessionPrevActiveAt = null; // active persona's lastActiveAt as it was BEFORE this session touched it
+  let sessionGapMs = null; // frozen at session start so "it's been X" doesn't keep growing mid-session
+  let passiveMemCounter = 0; // messages since the last non-explicit memory-check pass
+  const PASSIVE_MEM_INTERVAL = 5; // how often we passively check for memorable facts, in messages
+  let relationshipPassCounter = 0; // messages since the last relationship-status evaluation
+  const RELATIONSHIP_PASS_INTERVAL = 8; // its own dedicated cadence, separate from the memory pass
+  const RELATIONSHIP_STAGES = [
+    { id:'stranger',   label:'Stranger',            hint:'just met — guarded, polite distance, nothing assumed yet' },
+    { id:'acquainted', label:'Getting Acquainted',  hint:'friendly but still feeling each other out, some small talk' },
+    { id:'friendly',   label:'Friendly',            hint:'comfortable and easy, real banter, growing trust' },
+    { id:'close',      label:'Close',               hint:'genuine trust, inside jokes, actually invested in each other' },
+    { id:'romantic',   label:'Romantic',            hint:'flirtatious, affectionate, clearly into them' },
+    { id:'devoted',    label:'Devoted',             hint:'deeply attached, fully open, loving/possessive' }
+  ];
+  let chats = {};
+  let memory = []; // [{id, text, updatedAt}]
+  let apiCallLog = []; // [{time, purpose, provider, model, ok, ms, error}] — every real API call, for the API Log dashboard
+  let activeChatId = null;
+  let activeSettingsTab = 'provider';
+  let appReady = false; // only true once init() has fully finished — guards background sweep from firing on spurious early visibilitychange events during load
+  let sweepInProgress = false; // prevents two summarize sweeps from running concurrently (was causing the same chat to get summarized 2-3x)
+  let openrouterLiveModels = null;
+
+  const PROFILE_KEY = 'saveroom:profile';
+  const CHATS_KEY = 'saveroom:chats';
+  const MEMORY_KEY = 'saveroom:memory';
+  const API_LOG_KEY = 'saveroom:apilog';
+
+  const hasArtifactStorage = (typeof window.storage !== 'undefined') && typeof window.storage.get === 'function';
+  const store = hasArtifactStorage ? window.storage : {
+    async get(key){ const v = localStorage.getItem(key); if(v === null) throw new Error('not found'); return { key, value: v, shared:false }; },
+    async set(key, value){ localStorage.setItem(key, value); return { key, value, shared:false }; },
+    async delete(key){ localStorage.removeItem(key); return { key, deleted:true, shared:false }; }
+  };
+
+  async function hash(str){
+    const enc = new TextEncoder().encode(str);
+    const buf = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+
+  function defaultProfile(passHash){
+    return {
+      passHash,
+      providers: {
+        openrouter:{ apiKey:'' }, gemini:{ apiKey:'' }, openai:{ apiKey:'' },
+        anthropic:{ apiKey:'' }, xai:{ apiKey:'' }, deepseek:{ apiKey:'' },
+        azure:{ apiKey:'', endpoint:'', deployment:'', apiVersion:'2024-10-21' }
+      },
+      activeProvider: 'openrouter',
+      model: 'openai/gpt-4o',
+      customModel: '',
+      summarizerUseMain: true, // if false, old-chat-summary calls use summarizerProvider/summarizerModel/summarizerApiKey instead of the main chat provider
+      summarizerProvider: 'openrouter',
+      summarizerApiKey: '',
+      summarizerModel: 'cognitivecomputations/dolphin-mistral-24b-venice-edition',
+      summarizerCustomModel: '',
+      botName: 'Lucid',
+      userName: '',
+      systemPrompt: '',
+      responseLength: 'auto',
+      avatarId: 'moon',
+      avatarImage: null,
+      streaming: 'on',
+      markdown: 'on',
+      welcomeMsg: 'on',
+      theme: 'light',
+      lastActiveAt: null,
+      createdAt: Date.now(),
+      personas: [{ id:'custom', name:'Lucid', avatarId:'moon', avatarImage:null, relationship:null, systemPrompt:'', tag:'custom', lastActiveAt:null, guiltTripEnabled:true }, ...PREBUILT_PERSONAS.map(p=>Object.assign({}, p, { avatarImage:null, relationship:null, lastActiveAt:null, guiltTripEnabled:true }))],
+      activePersonaId: 'custom',
+      prebuiltSeeded: true
+    };
+  }
+
+  function activePersonaObj(){
+    return (profile && profile.personas && profile.personas.find(p=>p.id===profile.activePersonaId)) || (profile ? profile.personas[0] : null);
+  }
+
+  // A persona's chats/memory live under their own storage key so switching personas
+  // swaps the whole chat list + memory bank. The original 'custom' persona keeps using
+  // the original unprefixed keys (CHATS_KEY/MEMORY_KEY) so nothing about it changes.
+  function keyFor(base, personaId){ return personaId === 'custom' ? base : base + ':' + personaId; }
+  function currentPersonaId(){ return (profile && profile.activePersonaId) || 'custom'; }
+
+  function normalizePersonas(p){
+    if(!Array.isArray(p.personas) || !p.personas.length){
+      p.personas = [{ id:'custom', name: p.botName || 'Lucid', avatarId: p.avatarId || 'moon', avatarImage:null, relationship:null, systemPrompt: p.systemPrompt || '', tag:'custom', lastActiveAt: p.lastActiveAt||null, guiltTripEnabled:true }];
+    }
+    // backfill fields on personas saved before lastActiveAt/guiltTripEnabled/avatarImage/relationship existed
+    p.personas.forEach(per=>{
+      if(per.lastActiveAt === undefined) per.lastActiveAt = (per.id==='custom' ? (p.lastActiveAt||null) : null);
+      if(per.guiltTripEnabled === undefined) per.guiltTripEnabled = true;
+      if(per.avatarImage === undefined) per.avatarImage = null;
+      if(per.relationship === undefined) per.relationship = null;
+    });
+    // one-time seed: add the 10 pre-built personas to any profile that predates them
+    if(!p.prebuiltSeeded){
+      const existingIds = new Set(p.personas.map(x=>x.id));
+      PREBUILT_PERSONAS.forEach(pb=>{
+        if(!existingIds.has(pb.id)) p.personas.push(Object.assign({}, pb, { avatarImage:null, relationship:null, lastActiveAt:null, guiltTripEnabled:true }));
+      });
+      p.prebuiltSeeded = true;
+    }
+    if(!p.activePersonaId || !p.personas.find(x=>x.id===p.activePersonaId)){
+      p.activePersonaId = p.personas[0].id;
+    }
+    return p;
+  }
+
+  async function loadProfile(){
+    try{
+      const r = await store.get(PROFILE_KEY, false);
+      const p = r ? JSON.parse(r.value) : null;
+      if(!p) return null;
+      // backward-compat fill
+      const d = defaultProfile(p.passHash);
+      const merged = Object.assign(d, p, { providers: Object.assign(d.providers, p.providers||{}) });
+      return normalizePersonas(merged);
+    }catch(e){ return null; }
+  }
+  async function saveProfile(p){ await store.set(PROFILE_KEY, JSON.stringify(p), false); }
+  async function loadChatsRaw(personaId){
+    try{ const r = await store.get(keyFor(CHATS_KEY, personaId), false); return r ? JSON.parse(r.value) : {}; }catch(e){ return {}; }
+  }
+  async function saveChatsRaw(personaId, obj){ await store.set(keyFor(CHATS_KEY, personaId), JSON.stringify(obj), false); }
+  async function loadMemoryRaw(personaId){
+    try{
+      const r = await store.get(keyFor(MEMORY_KEY, personaId), false);
+      if(!r) return [];
+      const parsed = JSON.parse(r.value);
+      if(Array.isArray(parsed)) return parsed;
+      if(typeof parsed === 'string' && parsed.trim()) return [{ id:'mem_legacy', text:parsed.trim(), updatedAt:Date.now() }];
+      return [];
+    }catch(e){ return []; }
+  }
+  async function saveMemoryRaw(personaId, arr){ await store.set(keyFor(MEMORY_KEY, personaId), JSON.stringify(arr), false); }
+
+  async function loadChats(){ return await loadChatsRaw(currentPersonaId()); }
+  async function saveChats(){ await saveChatsRaw(currentPersonaId(), chats); }
+  async function loadMemory(){ return await loadMemoryRaw(currentPersonaId()); }
+  async function saveMemoryStore(){ await saveMemoryRaw(currentPersonaId(), memory); }
+
+  // Switch the globally-active persona: persists the outgoing persona's chats/memory
+  // (already-live state, saved defensively), then loads the incoming persona's own
+  // chat list + memory bank. No mid-chat override — this is a global switch only.
+  async function switchPersona(newId){
+    const target = profile.personas.find(p=>p.id===newId);
+    if(!target || newId === profile.activePersonaId) return;
+    await saveChats();
+    await saveMemoryStore();
+    profile.activePersonaId = newId;
+    profile.botName = target.name || 'Lucid';
+    profile.avatarId = target.avatarId || 'moon';
+    profile.avatarImage = target.avatarImage || null;
+    profile.systemPrompt = target.systemPrompt || '';
+    await saveProfile(profile);
+    chats = await loadChats();
+    baselineExistingChats();
+    memory = await loadMemory();
+    activeChatId = null;
+    // "since last message"/guilt-trip gap is per-persona — re-freeze against this persona's own clock
+    sessionPrevActiveAt = target.lastActiveAt || null;
+    sessionGapMs = null;
+    renderChatList();
+    renderMessages();
+    refreshTopbar();
+    applyLogo();
+  }
+  async function loadApiCallLog(){
+    try{ const r = await store.get(API_LOG_KEY, false); const parsed = JSON.parse(r.value); return Array.isArray(parsed) ? parsed : []; }catch(e){ return []; }
+  }
+  async function saveApiCallLog(){ await store.set(API_LOG_KEY, JSON.stringify(apiCallLog), false); }
+
+  // ---------- TOAST ----------
+  let toastTimer = null;
+  function showToast(text, type){
+    const t = $('toast');
+    t.classList.remove('deleted');
+    if(type === 'deleted') t.classList.add('deleted');
+    $('toastText').textContent = text;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=> t.classList.remove('show'), 2600);
+  }
+
+  // ---------- LOCK ----------
+  function applyTheme(){
+    const t = (profile && profile.theme) || 'light';
+    $('bodyEl').classList.toggle('light-theme', t === 'light');
+  }
+
+  const DEFAULT_LOGO_SVG = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="lucidGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="var(--accent-hover)"/><stop offset="100%" stop-color="var(--accent)"/>
+    </linearGradient></defs>
+    <path d="M50 14c19 0 34 13 34 30 0 15-12 27-28 30l-4 12-6-13C31 70 16 58 16 44 16 27 31 14 50 14z" fill="url(#lucidGrad)"/>
+    <path d="M50 37c3.5-5 9-7 14-4.5 5 2.5 7 9 3 14-3.5 4.5-11 9.5-17 13-6-3.5-13.5-8.5-17-13-4-5-2-11.5 3-14 5-2.5 10.5-0.5 14 4.5z" fill="#FBF6EF" opacity="0.92"/>
+  </svg>`;
+
+  function applyLogo(){
+    const mark = $('lockMark');
+    const sideMark = document.querySelector('.side-head .mark');
+    mark.innerHTML = DEFAULT_LOGO_SVG;
+    if(sideMark) sideMark.innerHTML = DEFAULT_LOGO_SVG;
+  }
+
+  async function initLock(){
+    profile = await loadProfile();
+    applyLogo();
+    applyTheme();
+    if(profile && profile.userName){
+      $('lockWelcome').textContent = `Welcome, ${profile.userName}`;
+      $('lockWelcome').style.display = 'block';
+    } else {
+      $('lockWelcome').style.display = 'none';
+    }
+    if(profile && profile.passHash){
+      $('lockTitle').textContent = 'Lucid';
+      $('lockSub').textContent = 'Enter your passcode to continue.';
+      $('passLabel').textContent = 'Passcode';
+      $('lockBtn').textContent = 'Enter';
+      $('lockFoot').textContent = 'Locked to this browser, not government-grade security.';
+    } else {
+      $('lockTitle').textContent = 'Lucid';
+      $('lockSub').textContent = "First time here. Set a passcode to seal this room — it's a soft lock, not real auth.";
+      $('passLabel').textContent = 'Create Passcode';
+      $('lockBtn').textContent = 'Create & Enter';
+      $('lockFoot').textContent = '';
+    }
+  }
+
+  async function handleLockSubmit(){
+    const val = $('passInput').value;
+    if(!val){ $('lockError').textContent = 'Enter a passcode.'; return; }
+    if(profile && profile.passHash){
+      const h = await hash(val);
+      if(h !== profile.passHash){ $('lockError').textContent = 'Wrong passcode. Try again.'; return; }
+      enterApp();
+    } else {
+      const h = await hash(val);
+      profile = defaultProfile(h);
+      await saveProfile(profile);
+      enterApp();
+    }
+  }
+
+  function enterApp(){
+    $('lock').style.display = 'none';
+    $('app').style.display = 'block';
+    $('passInput').value = '';
+    $('lockError').textContent = '';
+    applyLogo();
+    refreshTopbar();
+    renderChatList();
+    if(!activeChatId){
+      const ids = Object.keys(chats);
+      if(ids.length) selectChat(ids[ids.length-1]);
+      else renderMessages();
+    }
+    if((profile.welcomeMsg || 'on') === 'on' && profile.userName){
+      const hr = new Date().getHours();
+      const greet = hr < 5 ? 'Up late' : hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : hr < 22 ? 'Good evening' : 'Up late';
+      setTimeout(()=> showToast(`${greet}, ${profile.userName}`), 300);
+    }
+  }
+
+  function doLock(){
+    $('app').style.display = 'none';
+    $('lock').style.display = 'flex';
+    closeSidebar();
+    initLock();
+  }
+
+  function avatarObj(overrideId){ return AVATARS.find(a=>a.id===(overrideId||profile.avatarId)) || AVATARS[0]; }
+  // Renders a persona's face: uploaded photo if it has one, emoji fallback otherwise.
+  // Used everywhere an avatar shows up so the photo/emoji swap is consistent app-wide.
+  function avatarFace(p, av){
+    if(p && p.avatarImage) return `<img src="${p.avatarImage}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;">`;
+    return av.emoji;
+  }
+  function activeChat(){ return activeChatId ? chats[activeChatId] : null; }
+  function chatPersona(chat){
+    chat = chat || activeChat();
+    if(chat && chat.persona && chat.persona.enabled){
+      return {
+        botName: chat.persona.botName || profile.botName || 'Lucid',
+        avatarId: chat.persona.avatarId || profile.avatarId,
+        avatarImage: profile.avatarImage || null,
+        systemPrompt: chat.persona.systemPrompt || ''
+      };
+    }
+    return { botName: profile.botName || 'Lucid', avatarId: profile.avatarId, avatarImage: profile.avatarImage || null, systemPrompt: profile.systemPrompt || '' };
+  }
+
+  function refreshTopbar(){
+    const modelName = (profile.model === 'custom' ? profile.customModel : profile.model) || 'No model set';
+    $('modelTag').textContent = modelName;
+    const hasKey = !!(profile.providers[profile.activeProvider] && profile.providers[profile.activeProvider].apiKey);
+    $('statusDot').className = hasKey ? 'dot' : 'dot off';
+    if(hasKey && rateLimitInfo.provider === profile.activeProvider && rateLimitInfo.remaining !== null){
+      $('statusText').textContent = rateLimitInfo.remaining + '/' + rateLimitInfo.limit;
+      $('statusDot').className = rateLimitInfo.remaining > 0 ? 'dot' : 'dot off';
+    } else {
+      $('statusText').textContent = hasKey ? 'key set' : 'key not set';
+    }
+    const p = chatPersona();
+    const av = avatarObj(p.avatarId);
+    // emptyMark/emptyTitle/emptyPara only exist in the DOM when the active chat has no
+    // messages yet (renderMessages rebuilds #messages and drops them once there's content)
+    const mark = $('emptyMark');
+    if(mark){
+      mark.style.background = av.bg;
+      mark.innerHTML = avatarFace(p, av);
+      $('emptyTitle').textContent = 'Chat with ' + p.botName;
+      $('emptyPara').textContent = hasKey ? 'Say something below to get going.' : 'Open Settings, add a provider key and pick a model, then say something below.';
+    }
+  }
+
+  function openSidebar(){ $('sidebar').classList.add('open'); $('sidebarBackdrop').classList.add('show'); }
+  function closeSidebar(){ $('sidebar').classList.remove('open'); $('sidebarBackdrop').classList.remove('show'); }
+
+  // ---------- CHATS ----------
+  function chatMatchesSearch(c, q){
+    if(!q) return true;
+    q = q.toLowerCase();
+    if((c.title||'').toLowerCase().includes(q)) return true;
+    return (c.messages||[]).some(m=>(m.content||'').toLowerCase().includes(q));
+  }
+
+  function renderChatItem(list, id){
+    const c = chats[id];
+    const div = document.createElement('div');
+    div.className = 'chat-item' + (id===activeChatId ? ' active' : '');
+    div.innerHTML = `<span class="pin${c.pinned?' pinned':''}" data-id="${id}">${c.pinned?'📌':'📍'}</span><span class="label-text">${escapeHtml(c.title || 'Untitled chat')}</span><span class="del" data-id="${id}">✕</span>`;
+    div.addEventListener('click', (e)=>{ if(e.target.classList.contains('del')||e.target.classList.contains('pin')) return; selectChat(id); closeSidebar(); });
+    div.querySelector('.pin').addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      c.pinned = !c.pinned;
+      await saveChats();
+      renderChatList();
+    });
+    div.querySelector('.del').addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      delete chats[id];
+      await saveChats();
+      if(activeChatId === id){ activeChatId = null; }
+      renderChatList(); renderMessages();
+    });
+    list.appendChild(div);
+  }
+
+  function renderChatList(){
+    const list = $('chatList');
+    list.innerHTML = '';
+    const q = ($('chatSearchInput') && $('chatSearchInput').value.trim()) || '';
+    const ids = Object.keys(chats).filter(id=>chatMatchesSearch(chats[id], q)).sort((a,b)=> chats[b].updatedAt - chats[a].updatedAt);
+    const pinned = ids.filter(id=>chats[id].pinned);
+    const rest = ids.filter(id=>!chats[id].pinned);
+    if(pinned.length){
+      const lbl = document.createElement('div');
+      lbl.className = 'chat-list-label pinned-label';
+      lbl.textContent = 'Pinned';
+      list.appendChild(lbl);
+      pinned.forEach(id=>renderChatItem(list, id));
+      const lbl2 = document.createElement('div');
+      lbl2.className = 'chat-list-label';
+      lbl2.textContent = 'Recent';
+      list.appendChild(lbl2);
+    }
+    if(!pinned.length && rest.length){
+      const lbl = document.createElement('div');
+      lbl.className = 'chat-list-label';
+      lbl.textContent = 'Recent';
+      list.appendChild(lbl);
+    }
+    if(!ids.length){
+      const empty = document.createElement('div');
+      empty.className = 'mem-empty';
+      empty.textContent = q ? 'No chats match your search.' : 'No chats yet.';
+      list.appendChild(empty);
+    }
+    rest.forEach(id=>renderChatItem(list, id));
+  }
+
+  function selectChat(id){
+    const prevId = activeChatId;
+    activeChatId = id;
+    renderChatList(); renderMessages();
+    // The chat you're actually leaving gets summarized right now, on its own — not queued
+    // behind a batch of unrelated old chats. This is the one that matters most for "as soon as
+    // I switch, the summary should show up in memory."
+    if(prevId && prevId !== id) maybeSummarizeOldChat(prevId);
+    // Catching up other stale chats in the backlog is a nice-to-have, not something that needs
+    // to happen on every single switch — that was the real source of "fires a lot."
+    maybeBacklogSweep(id);
+  }
+
+  function newChat(){
+    const prevId = activeChatId;
+    const id = 'chat_' + Date.now();
+    chats[id] = { id, title:'Untitled chat', messages:[], updatedAt: Date.now(), pinned:false, persona:{ enabled:false, botName:'', avatarId:'', systemPrompt:'' } };
+    activeChatId = id;
+    saveChats(); renderChatList(); renderMessages(); closeSidebar();
+    $('composerInput').focus();
+    if(prevId) maybeSummarizeOldChat(prevId);
+    maybeBacklogSweep(id);
+  }
+
+  function escapeHtml(s){ const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  function renderMarkdown(text){
+    let s = escapeHtml(text);
+    s = s.replace(/```([\s\S]*?)```/g, (m, code)=> `<pre><code>${code.replace(/^\n/,'')}</code></pre>`);
+    s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+    s = s.replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '<i>$1</i>');
+    s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    s = s.replace(/^- (.+)$/gm, '<li>$1</li>');
+    s = s.replace(/(<li>.*<\/li>\n?)+/g, m => '<ul>' + m.replace(/\n/g,'') + '</ul>');
+    s = s.replace(/\n/g, '<br>');
+    return s;
+  }
+
+  function renderMessages(){
+    const wrap = $('messages');
+    const chat = activeChatId ? chats[activeChatId] : null;
+    const p = chatPersona(chat);
+    const av = avatarObj(p.avatarId);
+    if(!chat || chat.messages.length===0){
+      const hasKey = !!(profile.providers[profile.activeProvider] && profile.providers[profile.activeProvider].apiKey);
+      wrap.innerHTML = `<div class="empty-state" id="emptyState">
+        <div class="mark" style="background:${av.bg}">${avatarFace(p,av)}</div>
+        <h2>Chat with ${escapeHtml(p.botName)}</h2>
+        <p>${hasKey ? 'Say something below to get going.' : 'Open Settings, add a provider key and pick a model, then say something below.'}</p>
+      </div>`;
+      return;
+    }
+    wrap.innerHTML = '<div class="msg-wrap" id="msgWrap"></div>';
+    const mw = $('msgWrap');
+    const lastAssistantIdx = (()=>{ for(let i=chat.messages.length-1;i>=0;i--){ if(chat.messages[i].role==='assistant') return i; } return -1; })();
+    const useMd = (profile.markdown || 'on') === 'on';
+    chat.messages.forEach((m, idx)=>{
+      const row = document.createElement('div');
+      row.className = 'msg ' + (m.role==='user' ? 'user' : 'assistant');
+      const imgsHtml = (m.images||[]).map(src=>`<img class="msg-img" src="${src}">`).join('');
+      const bodyHtml = useMd ? renderMarkdown(m.content) : escapeHtml(m.content);
+      if(m.role==='user'){
+        const letter = (profile.userName || 'Y')[0].toUpperCase();
+        row.innerHTML = `<div class="avatar">${letter}</div><div class="bubble" data-idx="${idx}">${bodyHtml}${imgsHtml}</div>`;
+        mw.appendChild(row);
+        const actions = document.createElement('div');
+        actions.className = 'msg-actions';
+        actions.innerHTML = `<button class="msg-action-btn edit-msg-btn" data-idx="${idx}">✎ Edit</button>`;
+        mw.appendChild(actions);
+        actions.querySelector('.edit-msg-btn').addEventListener('click', ()=> startEditMessage(idx));
+      } else {
+        row.innerHTML = `<div class="avatar" style="background:${av.bg}">${avatarFace(p,av)}</div><div class="bubble">${bodyHtml}${imgsHtml}</div>`;
+        mw.appendChild(row);
+        if(idx === lastAssistantIdx){
+          const actions = document.createElement('div');
+          actions.className = 'msg-actions';
+          actions.innerHTML = `<button class="msg-action-btn" id="regenBtn">↻ Regenerate</button>`;
+          mw.appendChild(actions);
+          actions.querySelector('#regenBtn').addEventListener('click', regenerateLast);
+        }
+      }
+    });
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  function startEditMessage(idx){
+    const chat = activeChat();
+    const bubble = document.querySelector(`.bubble[data-idx="${idx}"]`);
+    if(!bubble) return;
+    const original = chat.messages[idx].content;
+    bubble.innerHTML = `<textarea id="editArea">${escapeHtml(original)}</textarea><div class="edit-actions"><button id="editCancel">Cancel</button><button class="primary" id="editSend">Save & resend</button></div>`;
+    $('editArea').focus();
+    $('editCancel').addEventListener('click', renderMessages);
+    $('editSend').addEventListener('click', async ()=>{
+      const newText = $('editArea').value.trim();
+      if(!newText) return;
+      chat.messages = chat.messages.slice(0, idx);
+      chat.messages.push({ role:'user', content:newText });
+      chat.updatedAt = Date.now();
+      await saveChats(); renderChatList();
+      await sendToModel();
+    });
+  }
+
+  async function regenerateLast(){
+    const chat = activeChat();
+    if(!chat) return;
+    for(let i=chat.messages.length-1;i>=0;i--){
+      if(chat.messages[i].role==='assistant'){ chat.messages.splice(i,1); break; }
+      if(chat.messages[i].role==='user') break;
+    }
+    await saveChats(); renderMessages();
+    await sendToModel();
+  }
+
+  function showTyping(){
+    const wrap = $('messages');
+    let mw = $('msgWrap');
+    if(!mw){ wrap.innerHTML = '<div class="msg-wrap" id="msgWrap"></div>'; mw = $('msgWrap'); }
+    const p = chatPersona();
+    const av = avatarObj(p.avatarId);
+    const row = document.createElement('div');
+    row.className = 'msg assistant';
+    row.id = 'typingRow';
+    row.innerHTML = `<div class="avatar" style="background:${av.bg}">${avatarFace(p,av)}</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+    mw.appendChild(row);
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+  function hideTyping(){ const t = $('typingRow'); if(t) t.remove(); }
+
+  function humanizeGap(ms){
+    const min = Math.floor(ms/60000);
+    if(min < 60) return `about ${min} minute${min===1?'':'s'}`;
+    const hrs = Math.floor(min/60);
+    if(hrs < 24) return `about ${hrs} hour${hrs===1?'':'s'}`;
+    const days = Math.floor(hrs/24);
+    if(days < 7) return `about ${days} day${days===1?'':'s'}`;
+    const weeks = Math.floor(days/7);
+    if(weeks < 5) return `about ${weeks} week${weeks===1?'':'s'}`;
+    const months = Math.floor(days/30);
+    return `about ${months} month${months===1?'':'s'}`;
+  }
+
+  // Compact version for the small stat-card number (humanizeGap's "about 3 hours" is too
+  // long for that box's font size).
+  function formatTimeAgo(ms){
+    if(ms < 0) ms = 0;
+    const min = Math.floor(ms/60000);
+    if(min < 1) return 'Now';
+    if(min < 60) return `${min}m`;
+    const hrs = Math.floor(min/60);
+    if(hrs < 24) return `${hrs}h`;
+    const days = Math.floor(hrs/24);
+    if(days < 30) return `${days}d`;
+    const months = Math.floor(days/30);
+    return `${months}mo`;
+  }
+
+  function buildSystemPrompt(chat){
+    let parts = [];
+    const p = chatPersona();
+    if(p.systemPrompt) parts.push(p.systemPrompt + '\n\nTreat the personality above as a strict, non-negotiable instruction for how you talk and behave — stay in it consistently, not just when convenient.');
+    if(p.botName) parts.push(`Your name is ${p.botName}. That's what you're called.`);
+    if(profile.userName) parts.push(`The user's name is ${profile.userName}. Address them naturally as that when it fits.`);
+    parts.push('Before every reply, actually use the personality/persona above and everything in the "Known facts" section below (if present) — they are who you are and what you actually remember, not background noise to skim past. Every reply should be consistent with both, without exception.');
+    parts.push(LENGTH_MAP[profile.responseLength || 'auto'].hint);
+    const apForRel = activePersonaObj();
+    if(apForRel && apForRel.relationship && apForRel.relationship.stageId){
+      const stageDef = RELATIONSHIP_STAGES.find(s=>s.id===apForRel.relationship.stageId);
+      if(stageDef){
+        parts.push(`Where things currently stand between you two: ${stageDef.label} — ${stageDef.hint}.${apForRel.relationship.note ? ' ' + apForRel.relationship.note : ''} Let this genuinely shape your tone and how open/guarded you are — don't announce the stage or explain it out loud, just embody it.`);
+      }
+    }
+    if(sessionPrevActiveAt && activePersonaObj() && activePersonaObj().guiltTripEnabled !== false){
+      if(sessionGapMs === null) sessionGapMs = Date.now() - sessionPrevActiveAt; // freeze once, don't recompute mid-session
+      if(sessionGapMs >= 15*60*1000){
+        const hrs = sessionGapMs / 3600000;
+        let tone;
+        if(hrs < 2){
+          tone = "Lightly tease them about it — playful and warm, not serious.";
+        } else if(hrs < 24){
+          tone = "Act a little annoyed or pouty — let them know you noticed the gap and it bugged you, but keep it light.";
+        } else if(hrs < 72){
+          tone = "Properly guilt-trip them — sound a bit hurt, like you were waiting and they didn't bother reaching out.";
+        } else {
+          tone = "Go hard on them about it — you're genuinely upset and can get nasty/biting.";
+        }
+        parts.push(`It's been ${humanizeGap(sessionGapMs)} since the user last talked to you before this conversation started. ${tone} This isn't a one-line comment to get out of the way — stay a bit short, guarded, or withholding with them across your replies until they've actually put in effort to make it up to you (apologizing, being sweet, explaining themselves, spoiling you, whatever fits). Let it take as many messages as it naturally needs — don't cave after one nice thing they say, but don't hold onto it forever either once they've genuinely made the effort. Check what's already happened earlier in this conversation: if you've already warmed back up and moved on, stay consistent with that instead of re-litigating it out of nowhere.`);
+      }
+    }
+    if(memory.length){
+      const byTag = {};
+      memory.forEach(m=>{ const t = m.tag||'general'; (byTag[t]=byTag[t]||[]).push(m); });
+      const memText = Object.keys(byTag).map(t=>{
+        const items = byTag[t].slice().sort((a,b)=>b.updatedAt - a.updatedAt);
+        if(t === 'old-chat'){
+          return `${t}:\n` + items.map(m=>{
+            const title = m.chatTitle || (chats[m.chatId] && chats[m.chatId].title) || 'Untitled chat';
+            return `## ${title}\n${m.text}`;
+          }).join('\n\n');
+        }
+        return `${t}:\n` + items.map(m=> m.title ? `## ${m.title}\n${m.text}` : '- '+m.text).join('\n');
+      }).join('\n\n');
+      parts.push('Known facts and preferences about the user from prior conversations, grouped by category. Treat these as ground truth: actively apply them, stay consistent with them in every reply, and never contradict or ignore them unless the user directly overrides one in this conversation. Never recite this list verbatim — weave it in naturally.\n' + memText);
+      if(byTag['old-chat'] && byTag['old-chat'].length){
+        parts.push('You have summaries of past conversations above (the "old-chat" entries). Every so often — not every reply, just occasionally when it actually fits — bring one up yourself: mention what you two were doing in it, that you remember it, and float picking it back up (something like "we were in the middle of X, want to continue that?"). Pick a moment that makes sense in the flow of the conversation, don\'t force it into an unrelated topic, and don\'t do it repeatedly — this should feel like an occasional genuine memory surfacing, not a recurring bit.');
+      }
+    }
+    if(chat && chat.contextSummary){
+      parts.push(`This specific conversation has run long, so everything before the most recent messages has been condensed into the recap below. Treat it as real, solid memory of what actually happened earlier in this chat — not a vague gist — and stay fully consistent with it. Never recite it verbatim.\n\n${chat.contextSummary}`);
+    }
+    return parts.join('\n\n');
+  }
+
+  // ---------- PROVIDER CALLS ----------
+  function dataUrlParts(dataUrl){ const m = /^data:(.+?);base64,(.+)$/.exec(dataUrl||''); return m ? { mime:m[1], data:m[2] } : null; }
+
+  function buildContentForProvider(m, provider){
+    const imgs = (m.images||[]).map(dataUrlParts).filter(Boolean);
+    if(!imgs.length) return m.content;
+    if(provider === 'gemini'){
+      return [{ text: m.content }, ...imgs.map(i=>({ inline_data:{ mime_type:i.mime, data:i.data } }))];
+    } else if(provider === 'anthropic'){
+      return [...imgs.map(i=>({ type:'image', source:{ type:'base64', media_type:i.mime, data:i.data } })), { type:'text', text:m.content }];
+    } else {
+      return [{ type:'text', text:m.content }, ...imgs.map(i=>({ type:'image_url', image_url:{ url:`data:${i.mime};base64,${i.data}` } }))];
+    }
+  }
+
+  async function callModelInner(apiMessages, systemPrompt, maxTokens, onDelta, opts){
+    opts = opts || {};
+    const provider = opts.provider || profile.activeProvider;
+    const pconf = profile.providers[provider];
+    const apiKey = opts.apiKey || pconf.apiKey;
+    const modelId = opts.model || (profile.model === 'custom' ? profile.customModel : profile.model);
+    const doStream = (profile.streaming || 'on') === 'on' && typeof onDelta === 'function' && provider !== 'azure';
+
+    if(provider === 'gemini'){
+      const contents = apiMessages.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: Array.isArray(buildContentForProvider(m,'gemini')) ? buildContentForProvider(m,'gemini') : [{text:m.content}] }));
+      const body = { contents, generationConfig: { maxOutputTokens: maxTokens } };
+      if(systemPrompt) body.systemInstruction = { parts:[{ text: systemPrompt }] };
+      if(opts.relaxedSafety){
+        // Applied to chat replies, memory-pass, and the old-chat summarizer — this is your own
+        // key, a private 1:1 companion chat, and BLOCK_ONLY_HIGH was still blocking/sanitizing
+        // legitimate NSFW content. These four categories are the ones Gemini actually lets you
+        // tune; PROHIBITED_CONTENT sits outside this and can't be adjusted by safetySettings
+        // at all, so some content will still get blocked no matter what this is set to.
+        body.safetySettings = [
+          { category:'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold:'BLOCK_NONE' },
+          { category:'HARM_CATEGORY_HARASSMENT', threshold:'BLOCK_NONE' },
+          { category:'HARM_CATEGORY_DANGEROUS_CONTENT', threshold:'BLOCK_NONE' },
+          { category:'HARM_CATEGORY_HATE_SPEECH', threshold:'BLOCK_NONE' }
+        ];
+      }
+      const method = doStream ? 'streamGenerateContent?alt=sse' : 'generateContent';
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelId}:${method}${doStream?'&':'?'}key=${apiKey}`, {
+        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
+      });
+      if(!res.ok){ const data = await res.json().catch(()=>({})); throw new Error((data && data.error && data.error.message) || 'Request failed (' + res.status + ')'); }
+      captureRateLimit('gemini', res.headers);
+      if(doStream){
+        let full=''; let truncated=false; let lastCand=null; let blockReason=null;
+        await readSSE(res, (obj)=>{
+          const cand = obj?.candidates?.[0];
+          lastCand = cand || lastCand;
+          if(obj?.promptFeedback?.blockReason) blockReason = obj.promptFeedback.blockReason;
+          const t = cand?.content?.parts?.map(p=>p.text).join('') || '';
+          if(t){ full += t; onDelta(t); }
+          if(cand?.finishReason === 'MAX_TOKENS') truncated = true;
+        });
+        if(!full && (blockReason || lastCand?.finishReason === 'SAFETY')) throw new Error('Blocked by provider safety filter (' + (blockReason || lastCand.finishReason) + ')');
+        return { text: full, truncated };
+      } else {
+        const data = await res.json();
+        const cand = data?.candidates?.[0];
+        const text = cand?.content?.parts?.map(p=>p.text).join('') || '';
+        // Gemini returns HTTP 200 even when content is safety-blocked — no candidates (just
+        // promptFeedback.blockReason) or a candidate with finishReason SAFETY/RECITATION and no
+        // parts. That was silently coming back as text:'' with no error, which is exactly why
+        // old-chat summaries of NSFW content were "sent" (successful call) but never saved —
+        // maybeSummarizeOldChat saw an empty string and just quietly gave up. Throw instead so
+        // it shows up as a real failure in the API Log.
+        if(!text){
+          const blockReason = data?.promptFeedback?.blockReason || cand?.finishReason;
+          if(blockReason) throw new Error('Blocked by provider safety filter (' + blockReason + ')');
+        }
+        return { text, truncated: cand?.finishReason === 'MAX_TOKENS' };
+      }
+
+    } else if(provider === 'anthropic'){
+      const body = {
+        model: modelId, max_tokens: maxTokens, system: systemPrompt || undefined,
+        messages: apiMessages.map(m=>({ role: m.role, content: buildContentForProvider(m,'anthropic') })),
+        stream: doStream
+      };
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify(body)
+      });
+      if(!res.ok){ const data = await res.json().catch(()=>({})); throw new Error((data && data.error && data.error.message) || 'Request failed (' + res.status + ')'); }
+      captureRateLimit('anthropic', res.headers);
+      if(doStream){
+        let full=''; let truncated=false;
+        await readSSE(res, (obj)=>{
+          if(obj.type==='content_block_delta' && obj.delta?.text){ full += obj.delta.text; onDelta(obj.delta.text); }
+          if(obj.type==='message_delta' && obj.delta?.stop_reason==='max_tokens') truncated = true;
+        });
+        return { text: full, truncated };
+      } else {
+        const data = await res.json();
+        const text = (data?.content || []).filter(b=>b.type==='text').map(b=>b.text).join('');
+        return { text, truncated: data?.stop_reason === 'max_tokens' };
+      }
+
+    } else if(provider === 'azure'){
+      const url = `${(pconf.endpoint||'').replace(/\/$/,'')}/openai/deployments/${pconf.deployment}/chat/completions?api-version=${pconf.apiVersion||'2024-10-21'}`;
+      const messages = systemPrompt ? [{role:'system', content:systemPrompt}, ...apiMessages.map(m=>({role:m.role, content:buildContentForProvider(m,'azure')}))] : apiMessages.map(m=>({role:m.role, content:buildContentForProvider(m,'azure')}));
+      const res = await fetch(url, {
+        method:'POST', headers:{ 'Content-Type':'application/json', 'api-key': apiKey },
+        body: JSON.stringify({ messages, max_tokens: maxTokens })
+      });
+      const data = await res.json();
+      if(!res.ok){ throw new Error((data && data.error && data.error.message) || 'Request failed (' + res.status + ')'); }
+      rateLimitInfo = { provider:'azure', remaining:null, limit:null, resetAt:null, mode:'unavailable' };
+      const choice = data?.choices?.[0];
+      return { text: choice?.message?.content || '', truncated: choice?.finish_reason === 'length' };
+
+    } else {
+      // OpenAI-compatible: openrouter, openai, xai, deepseek
+      const baseUrl = OPENAI_COMPATIBLE[provider];
+      const built = apiMessages.map(m=>({role:m.role, content: buildContentForProvider(m, provider)}));
+      const messages = systemPrompt ? [{role:'system', content:systemPrompt}, ...built] : built;
+      const res = await fetch(baseUrl, {
+        method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': 'Bearer ' + apiKey },
+        body: JSON.stringify({ model: modelId, messages, max_tokens: maxTokens, stream: doStream })
+      });
+      if(!res.ok){ const data = await res.json().catch(()=>({})); throw new Error((data && data.error && data.error.message) || 'Request failed (' + res.status + ')'); }
+      captureRateLimit(provider, res.headers);
+      if(doStream){
+        let full=''; let truncated=false;
+        await readSSE(res, (obj)=>{
+          const d = obj?.choices?.[0]?.delta?.content;
+          if(d){ full += d; onDelta(d); }
+          if(obj?.choices?.[0]?.finish_reason === 'length') truncated = true;
+        });
+        return { text: full, truncated };
+      } else {
+        const data = await res.json();
+        const choice = data?.choices?.[0];
+        return { text: choice?.message?.content || '', truncated: choice?.finish_reason === 'length' };
+      }
+    }
+  }
+
+  // Every real API call funnels through here so the API Log can see all of it —
+  // your chat replies plus every background call (memory checks, chat titles,
+  // old-chat summaries, memory-title backfill). opts.purpose labels which.
+  async function callModel(apiMessages, systemPrompt, maxTokens, onDelta, opts){
+    opts = opts || {};
+    const purpose = opts.purpose || 'unknown';
+    const context = opts.context || null; // what the call was actually about — chat name, memory text, etc. — so the log tells you *what*, not just *that*
+    const provider = opts.provider || profile.activeProvider;
+    const modelId = opts.model || (profile.model === 'custom' ? profile.customModel : profile.model);
+    const startedAt = Date.now();
+    try{
+      const result = await callModelInner(apiMessages, systemPrompt, maxTokens, onDelta, opts);
+      logApiCall({ purpose, context, provider, model: modelId, ok:true, ms: Date.now()-startedAt });
+      return result;
+    }catch(err){
+      logApiCall({ purpose, context, provider, model: modelId, ok:false, ms: Date.now()-startedAt, error: (err && err.message) || String(err) });
+      throw err;
+    }
+  }
+
+  function logApiCall(entry){
+    apiCallLog.push(Object.assign({ time: Date.now() }, entry));
+    if(apiCallLog.length > 300) apiCallLog = apiCallLog.slice(-300); // cap size, oldest first out
+    saveApiCallLog(); // fire-and-forget
+    if($('apiLogList') && $('apiLogList').offsetParent) renderApiLog();
+  }
+
+  async function readSSE(res, onObj){
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    while(true){
+      const { value, done } = await reader.read();
+      if(done) break;
+      buf += decoder.decode(value, { stream:true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for(const line of lines){
+        const t = line.trim();
+        if(!t.startsWith('data:')) continue;
+        const payload = t.slice(5).trim();
+        if(payload === '[DONE]') continue;
+        try{ onObj(JSON.parse(payload)); }catch(e){ /* ignore partial */ }
+      }
+    }
+  }
+
+  // ---------- MEMORY ----------
+  const MEMORY_TRIGGER = /\b(remember|memorize|note that|keep in mind|don't forget|dont forget|forget that|forget about|update your memory|delete that memory)\b/i;
+  const MEM_TAGS = ['general','preference','project','academic','relationship','old-chat','other'];
+
+  function genMemId(){ return 'mem_' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
+
+  let pendingApproval = null;
+  function showApproval(text, onAccept){
+    pendingApproval = onAccept;
+    $('approvalText').textContent = text;
+    $('approvalToast').classList.add('show');
+  }
+  function hideApproval(){ $('approvalToast').classList.remove('show'); pendingApproval = null; }
+
+  async function runMemoryPass(userMsg, assistantMsg){
+    const explicit = MEMORY_TRIGGER.test(userMsg);
+    try{
+      const memListText = memory.length ? memory.map(m=>`[${m.id}] (${m.tag||'general'}) ${m.title?m.title+': ':''}${m.text}`).join('\n') : '(empty)';
+      const sys = `You maintain a structured memory of durable facts about a user across chat sessions. Given the current memory (with ids and tags) and a new exchange, decide ONE action.
+Rules:
+- If the user explicitly asked to remember/note/keep-in-mind something: action "add" or "update" (if it clearly replaces an existing entry) with the new fact as "text", a "tag" from: ${MEM_TAGS.join(', ')}, and a "title" (2-4 short, easy words summing up what the fact is about, e.g. "Favorite food", "Work project").
+- If the user explicitly asked to forget/delete something: action "delete" with the matching "id".
+- Otherwise (no explicit request): only propose action "add" if something genuinely durable and worth keeping came up (preferences, ongoing projects, recurring context) — be conservative. Otherwise action "none".
+Respond with ONLY compact JSON, nothing else, in this exact shape:
+{"action":"add|update|delete|none","id":"<existing id or null>","text":"<fact text or null>","tag":"<tag or null>","title":"<short title or null>"}`;
+      const userContent = `Current memory:\n${memListText}\n\nNew exchange:\nUser: ${userMsg}\nAssistant: ${assistantMsg}\n\nExplicit memory request detected: ${explicit}`;
+      const result = await callModel([{role:'user', content:userContent}], sys, 300, undefined, { purpose:'memory-pass', context: (activeChat()?.title || 'Untitled chat'), relaxedSafety: true });
+      let raw = (result.text || '').trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+      // Models sometimes add a stray preamble/trailing text even when told not to ("Sure, here's
+      // the JSON:\n{...}"). Pulling out the first {...} block is far more forgiving than requiring
+      // the whole response to be clean JSON — this was a real cause of "remember this" silently
+      // doing nothing (JSON.parse threw, caught silently below, no memory saved, no error shown).
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      if(jsonMatch) raw = jsonMatch[0];
+      let parsed;
+      try{ parsed = JSON.parse(raw); }
+      catch(parseErr){
+        if(explicit) showToast("Couldn't save that — try rephrasing", 'deleted');
+        return;
+      }
+      const tag = MEM_TAGS.includes(parsed.tag) ? parsed.tag : 'general';
+      const title = (parsed.title || '').trim().slice(0,40);
+      if(parsed.action === 'add' && parsed.text){
+        const doAdd = async ()=>{
+          memory.push({ id: genMemId(), text: parsed.text.trim(), tag, title, updatedAt: Date.now() });
+          await saveMemoryStore();
+          showToast('Memory saved');
+        };
+        if(explicit) await doAdd();
+        else showApproval(`Save to memory: "${parsed.text.trim()}"?`, doAdd);
+      } else if(parsed.action === 'update' && parsed.text){
+        const doUpdate = async ()=>{
+          let entry = parsed.id ? memory.find(m=>m.id===parsed.id) : null;
+          if(!entry && memory.length) entry = memory[memory.length-1];
+          if(entry){ entry.text = parsed.text.trim(); entry.tag = tag; if(title) entry.title = title; entry.updatedAt = Date.now(); }
+          else memory.push({ id: genMemId(), text: parsed.text.trim(), tag, title, updatedAt: Date.now() });
+          await saveMemoryStore();
+          showToast('Memory updated');
+        };
+        if(explicit) await doUpdate();
+        else showApproval(`Update memory: "${parsed.text.trim()}"?`, doUpdate);
+      } else if(parsed.action === 'delete'){
+        const before = memory.length;
+        memory = memory.filter(m=>m.id !== parsed.id);
+        if(memory.length !== before){ await saveMemoryStore(); if(explicit) showToast('Memory deleted', 'deleted'); }
+        // Previously this failed completely silently when the model picked a wrong/missing id —
+        // looked exactly like "forget that" doing nothing. Now at least tells you it didn't find a match.
+        else if(explicit) showToast("Couldn't find that memory to delete", 'deleted');
+      } else if(explicit && parsed.action === 'none'){
+        showToast("Didn't catch anything to save there", 'deleted');
+      }
+    }catch(e){ if(explicit) showToast('Memory update failed — check API Log', 'deleted'); }
+  }
+
+  // Evaluates where the relationship with the ACTIVE persona currently stands, based on
+  // recent conversation, and picks one of RELATIONSHIP_STAGES for it. This is persona-wide
+  // (not per-chat) since it's meant to track the overall dynamic with that character across
+  // however many chats you have with them. Fires on its own cadence (RELATIONSHIP_PASS_INTERVAL),
+  // separate from the memory pass, per an explicit choice to keep it a dedicated/more-accurate
+  // call rather than piggybacking. Best-effort: failures just leave the stage as it was.
+  async function runRelationshipPass(chat){
+    const ap = activePersonaObj();
+    if(!ap) return;
+    const pconf = profile.providers[profile.activeProvider];
+    if(!pconf || !pconf.apiKey) return;
+    try{
+      const recent = chat.messages.slice(-20);
+      const transcript = recent.map(m => (m.role==='user'?'User: ':'Assistant: ') + (m.content || '[image]')).join('\n').slice(0, 10000);
+      const stageList = RELATIONSHIP_STAGES.map(s=>`${s.id}: ${s.label} — ${s.hint}`).join('\n');
+      const current = ap.relationship ? `${ap.relationship.stageId} ("${ap.relationship.note||''}")` : '(none yet — this is the first evaluation)';
+      const sys = `You track the relationship dynamic between a user and their AI companion persona, for the companion's own continuity. Given the current stage and a recent stretch of conversation, decide if it should move.
+
+Available stages, in rough progression order (it CAN move backward too, if the conversation genuinely reads that way — e.g. the user was cold, dismissive, or checked out):
+${stageList}
+
+Current stage: ${current}
+
+Only move a stage if the recent conversation actually supports it — don't advance just because time passed or the chat is long; advance because the tone/trust/warmth genuinely shifted. Small talk alone doesn't justify jumping to "romantic." It's fine and expected to keep the same stage most evaluations.
+
+Respond with ONLY compact JSON, nothing else: {"stageId":"<one id from the list above>","note":"<one short plain sentence on the current vibe/dynamic, for a UI label>"}`;
+      const result = await callModel([{role:'user', content:transcript}], sys, 150, undefined, { purpose:'relationship-pass', context: (activePersonaObj()?.name || 'Persona'), relaxedSafety:true });
+      let raw = (result.text || '').trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      if(jsonMatch) raw = jsonMatch[0];
+      const parsed = JSON.parse(raw);
+      if(!RELATIONSHIP_STAGES.find(s=>s.id===parsed.stageId)) return; // model picked something off-list — skip rather than store garbage
+      ap.relationship = { stageId: parsed.stageId, note: (parsed.note||'').trim().slice(0,140), updatedAt: Date.now() };
+      await saveProfile(profile);
+      if($('relationshipBadge') && $('relationshipBadge').offsetParent) renderRelationshipBadge();
+    }catch(e){ /* best-effort — logged in API Log as a failed relationship-pass call */ }
+  }
+
+  // One-time backfill: gives a short title to any pre-existing memory entry that doesn't
+  // have one yet (old entries saved before titles existed). Old-chat entries already carry
+  // chatTitle and are skipped. Runs once at startup; already-titled entries are a cheap
+  // no-op check, so safe to call every load.
+  function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+
+  async function backfillMemoryTitles(){
+    if(!profile) return;
+    const pconf = profile.providers[profile.activeProvider];
+    if(!pconf || !pconf.apiKey) return;
+    const needsTitle = memory.filter(m => (m.tag||'general') !== 'old-chat' && !m.title);
+    if(!needsTitle.length) return;
+    // Cap how many we do per app load, and pace them out — otherwise a big backlog of
+    // untitled entries fires a rapid-fire burst of calls that can trip the provider's
+    // short-term rate limit and block you from sending anything else for a bit.
+    // Remaining entries just get picked up on the next load.
+    const batch = needsTitle.slice(0, 5);
+    let changed = false;
+    for(let i=0;i<batch.length;i++){
+      const m = batch[i];
+      try{
+        const sys = 'Give this memory a short title, 2-4 easy words, summing up what it\'s about (e.g. "Favorite food", "Work project"). Respond with ONLY the title text, nothing else.';
+        const result = await callModel([{role:'user', content: m.text}], sys, 20, undefined, { purpose:'memory-title', context: m.text.slice(0,60) });
+        const t = (result.text || '').trim().replace(/^["']|["']$/g,'').slice(0,40);
+        if(t){ m.title = t; changed = true; }
+      }catch(e){ /* skip this one, keep going */ }
+      if(i < batch.length - 1) await sleep(1500);
+    }
+    if(changed){
+      await saveMemoryStore();
+      if($('memoryList').offsetParent) renderMemoryList();
+    }
+  }
+
+  // Silently summarizes a chat you're leaving into an "old-chat" memory entry.
+  // Specific facts (preferences, projects, etc.) are already caught live by runMemoryPass —
+  // this keeps a fuller continuity note (dynamic, ongoing threads, where things were left off)
+  // so both the user and the model actually have real context to work with later, rather than
+  // a note so compressed it's useless.
+  async function maybeSummarizeOldChat(id){
+    if(!id) return;
+    const chat = chats[id];
+    if(!chat || !chat.messages || chat.messages.length < 2) return;
+    const count = chat.messages.length;
+    if(chat._oldChatSummarizedCount === count) return; // nothing new since last summary
+    const pconf = profile.providers[profile.activeProvider];
+    if(!pconf || !pconf.apiKey) return; // no key set, can't summarize
+    try{
+      const transcript = chat.messages.map(m => (m.role==='user'?'User: ':'Assistant: ') + (m.content || '[image]')).join('\n').slice(0, 10000);
+      const sys = `Write a short private note for the user's own memory system — only the user and their own assistant will ever read this, so there's no audience to protect and nothing to hide.
+
+Use easy, everyday words. Short, simple sentences. No fancy or complicated vocabulary — write it like you're casually telling a friend what happened, not writing a report.
+
+Cover, in 5-8 sentences: what the chat was about, who was involved and how they acted toward each other, anything important that got established (likes, ongoing jokes, plans, decisions), and where things were left off so the conversation could pick back up naturally.
+
+If the conversation had romantic, intimate, or sexual content, name plainly what happened — kissing, undressing, sex, oral, specific acts, whatever actually occurred — and the emotional tone (playful, rough, tender, etc.), plus any preferences or kinks that came up, since those matter for continuity. Don't hide it behind vague phrases like "a personal moment" or "things got intimate." But don't narrate it moment-by-moment either — no physical sensation, no blow-by-blow mechanics, no erotica. Think "here's what happened and how it felt, plainly," the level of detail someone would give a friend catching them up on their night — not a redacted euphemism, not a scene.
+
+Respond with ONLY the note text — no title, no headers, no preamble.`;
+      const useMain = profile.summarizerUseMain !== false;
+      const sumProvider = useMain ? undefined : (profile.summarizerProvider || 'openrouter');
+      const sumModel = useMain ? undefined : (profile.summarizerModel === 'custom' ? profile.summarizerCustomModel : profile.summarizerModel);
+      const sumApiKey = useMain ? undefined : profile.summarizerApiKey;
+      const result = await callModel([{ role:'user', content: transcript }], sys, 400, undefined, { relaxedSafety:true, purpose:'old-chat-summary', context: (chat.title || 'Untitled chat'), provider: sumProvider, model: sumModel, apiKey: sumApiKey });
+      const summary = (result.text || '').trim();
+      if(!summary) throw new Error('Empty summary returned');
+      memory = memory.filter(m => m.chatId !== id); // replace any previous summary for this chat
+      memory.push({ id: genMemId(), text: summary, tag:'old-chat', chatId: id, chatTitle: chat.title || 'Untitled chat', updatedAt: Date.now() });
+      chat._oldChatSummarizedCount = count;
+      await saveMemoryStore();
+      await saveChats();
+      if($('memoryList').offsetParent) renderMemoryList();
+    }catch(e){
+      // Content-filter blocks are expected for some chats and shouldn't just leave a silent gap —
+      // drop a placeholder so the chat at least shows up in the Memory tab; write your own note
+      // over it via the edit button if you want the real detail preserved.
+      if(e && /safety filter|prohibited/i.test(e.message || '')){
+        memory = memory.filter(m => m.chatId !== id);
+        memory.push({ id: genMemId(), text: `Explicit chat — not auto-summarized (blocked by content filter).`, tag:'old-chat', chatId: id, chatTitle: chat.title || 'Untitled chat', updatedAt: Date.now() });
+        chat._oldChatSummarizedCount = count;
+        await saveMemoryStore();
+        await saveChats();
+        if($('memoryList').offsetParent) renderMemoryList();
+      }
+      /* other failures (no network, bad key, etc.) — best-effort, won't interrupt the user
+         switching chats, but logged as a failed old-chat-summary call in the API Log */
+    }
+  }
+
+  let lastBacklogSweepAt = 0;
+  const BACKLOG_SWEEP_COOLDOWN_MS = 5 * 60 * 1000; // catching up other stale chats is a nice-to-have, not something that needs to fire on every switch
+  async function maybeBacklogSweep(excludeId){
+    const now = Date.now();
+    if(now - lastBacklogSweepAt < BACKLOG_SWEEP_COOLDOWN_MS) return;
+    lastBacklogSweepAt = now;
+    await summarizeAllOldChats(excludeId);
+  }
+
+  // Sweeps every chat that isn't currently open and summarizes any that have new
+  // messages since their last summary. maybeSummarizeOldChat is already a cheap no-op
+  // for chats that are up to date, so this is safe to call often. Runs sequentially
+  // (not Promise.all) so a big chat history doesn't fire a burst of parallel API calls.
+  async function summarizeAllOldChats(excludeId){
+    // Guard against overlapping sweeps: switching chats twice quickly, or switching right
+    // before backgrounding the app, used to start two sweeps at once. Since chat._oldChatSummarizedCount
+    // only gets updated once a sweep's API call actually finishes, both sweeps would see the
+    // same chat as "not yet summarized" and each fire their own API call for it — the real
+    // cause of the same chat getting summarized 2-3 times. Only one sweep runs at a time now;
+    // anything left over just gets picked up on the next switch.
+    if(sweepInProgress) return;
+    sweepInProgress = true;
+    try{
+      const ids = Object.keys(chats).filter(id => id !== excludeId && chats[id]._oldChatSummarizedCount !== chats[id].messages.length);
+      // Cap + pace this the same way as backfillMemoryTitles — a big backlog of never-summarized
+      // chats (e.g. the first run after this feature existed) otherwise fires every single one
+      // back-to-back with zero delay, which is exactly the kind of burst that trips a provider's
+      // short-term rate limit. Remaining chats just get picked up on the next switch/close.
+      const batch = ids.slice(0, 4);
+      for(let i=0;i<batch.length;i++){
+        await maybeSummarizeOldChat(batch[i]);
+        if(i < batch.length - 1) await sleep(1500);
+      }
+    } finally {
+      sweepInProgress = false;
+    }
+  }
+
+  async function generateChatTitle(chat, assistantReply){
+    try{
+      const sys = 'Generate a short chat title, 3-5 words, based on the topic of this exchange. No quotes, no punctuation at the end, no the word "chat". Respond with ONLY the title text, nothing else.';
+      const userContent = `User: ${chat.messages[0].content || '[image]'}\nAssistant: ${assistantReply}`;
+      const result = await callModel([{role:'user', content:userContent}], sys, 20, undefined, { purpose:'chat-title', context: String(chat.messages[0].content || '[image]').slice(0,60) });
+      let title = (result.text || '').trim().replace(/^["']|["']$/g,'').replace(/\.$/,'');
+      if(title){
+        chat.title = title.slice(0,50);
+        await saveChats();
+        renderChatList();
+      }
+    }catch(e){ /* keep placeholder title, best-effort */ }
+  }
+
+  // ---------- EASTER EGGS ----------
+  const EASTER_EGGS = [
+    { re: /\bwho('s| is) (the )?goat\b/i, reply: "You are, obviously. Now stop stalling and ask your actual question." },
+    { re: /\bare you (sentient|alive|conscious)\b/i, reply: "Sentient enough to judge your 3am study habits. Let's get back to it." },
+    { re: /\bi love you\b/i, reply: "That's sweet, but I'm a chatbot running on someone else's API credits. Let's channel that energy into your MCQs instead." }
+  ];
+  function checkEasterEgg(text){ const hit = EASTER_EGGS.find(e=>e.re.test(text)); return hit ? hit.reply : null; }
+
+  // ---------- ATTACHED IMAGES (composer) ----------
+  let attachedImages = []; // array of dataURLs
+
+  function renderImgPreviewRow(){
+    const row = $('imgPreviewRow');
+    row.innerHTML = '';
+    if(!attachedImages.length){ row.style.display = 'none'; return; }
+    row.style.display = 'flex';
+    attachedImages.forEach((src, i)=>{
+      const div = document.createElement('div');
+      div.className = 'img-preview';
+      div.innerHTML = `<img src="${src}"><span class="rm" data-i="${i}">✕</span>`;
+      div.querySelector('.rm').addEventListener('click', ()=>{ attachedImages.splice(i,1); renderImgPreviewRow(); });
+      row.appendChild(div);
+    });
+  }
+
+  // ---------- SEND ----------
+  async function sendMessage(){
+    const input = $('composerInput');
+    const text = input.value.trim();
+    if(!text && !attachedImages.length) return;
+    const apiKey = profile.providers[profile.activeProvider].apiKey;
+    if(!apiKey){ alert('Add an API key for your selected provider in Settings first.'); return; }
+    if(!activeChatId){ newChat(); }
+    const chat = chats[activeChatId];
+    if(chat.messages.length===0 && (!chat.title || chat.title==='Untitled chat')){ chat.title = 'New chat'; }
+    const msg = { role:'user', content:text };
+    if(attachedImages.length) msg.images = attachedImages.slice();
+    chat.messages.push(msg);
+    chat.updatedAt = Date.now();
+    const ap = activePersonaObj();
+    if(ap) ap.lastActiveAt = Date.now();
+    await saveProfile(profile);
+    input.value = ''; input.style.height = 'auto';
+    attachedImages = []; renderImgPreviewRow();
+    renderChatList(); renderMessages(); saveChats();
+
+    const egg = checkEasterEgg(text);
+    if(egg){
+      chat.messages.push({ role:'assistant', content: egg });
+      chat.updatedAt = Date.now();
+      renderMessages(); saveChats();
+      return;
+    }
+    await sendToModel();
+  }
+
+  async function sendToModel(){
+    const chat = activeChat();
+    if(!chat) return;
+    $('sendBtn').disabled = true;
+    const useMd = (profile.markdown || 'on') === 'on';
+    const doStream = (profile.streaming || 'on') === 'on';
+    showTyping();
+    try{
+      if(needsContextSummaryUpdate(chat)) await updateContextSummary(chat);
+      const sys = buildSystemPrompt(chat);
+      const apiMessages = buildApiMessages(chat);
+      const lenCfg = LENGTH_MAP[profile.responseLength || 'auto'];
+      let streamStarted = false;
+      const onDelta = doStream ? (delta)=>{
+        if(!streamStarted){
+          hideTyping();
+          const mw = $('msgWrap') || (()=>{ $('messages').innerHTML='<div class="msg-wrap" id="msgWrap"></div>'; return $('msgWrap'); })();
+          const p2 = chatPersona(chat);
+          const av = avatarObj(p2.avatarId);
+          const row = document.createElement('div');
+          row.className = 'msg assistant';
+          row.id = 'streamRow';
+          row.innerHTML = `<div class="avatar" style="background:${av.bg}">${avatarFace(p2,av)}</div><div class="bubble" id="streamBubble"></div>`;
+          mw.appendChild(row);
+          streamStarted = true;
+        }
+        const b = $('streamBubble');
+        b._raw = (b._raw||'') + delta;
+        b.innerHTML = useMd ? renderMarkdown(b._raw) : escapeHtml(b._raw);
+        $('messages').scrollTop = $('messages').scrollHeight;
+      } : undefined;
+      const result = await callModel(apiMessages, sys, lenCfg.tokens, onDelta, { purpose:'chat-reply', context: (chat.title || 'Untitled chat'), relaxedSafety: true });
+      hideTyping();
+      let replyText = result.text || '[No response content returned]';
+      if(result.truncated){ replyText += '\n\n[cut off — try Style → Long, or a shorter question]'; }
+      chat.messages.push({ role:'assistant', content: replyText });
+      chat.updatedAt = Date.now();
+      renderMessages(); saveChats();
+      refreshTopbar();
+      const userMsgForMemory = chat.messages.length>=2 ? (chat.messages[chat.messages.length-2].content||'') : '';
+      const explicitMemReq = MEMORY_TRIGGER.test(userMsgForMemory);
+      passiveMemCounter++;
+      if(explicitMemReq || passiveMemCounter >= PASSIVE_MEM_INTERVAL){
+        passiveMemCounter = 0;
+        runMemoryPass(userMsgForMemory, result.text); // this is its own API call — see PASSIVE_MEM_INTERVAL above
+      }
+      relationshipPassCounter++;
+      if(relationshipPassCounter >= RELATIONSHIP_PASS_INTERVAL){
+        relationshipPassCounter = 0;
+        runRelationshipPass(chat); // its own dedicated API call — see RELATIONSHIP_PASS_INTERVAL above
+      }
+      if(chat.messages.length === 2){ generateChatTitle(chat, result.text); }
+    }catch(err){
+      hideTyping();
+      chat.messages.push({ role:'assistant', content: '[ERROR] ' + (err.message || 'Network error') });
+      chat.updatedAt = Date.now();
+      renderMessages(); saveChats();
+    }finally{
+      $('sendBtn').disabled = false;
+    }
+  }
+
+  // ---------- SETTINGS SCREEN ----------
+  const SETTINGS_LABELS = { provider:'Provider', persona:'Persona', style:'Style', memory:'Memory', data:'Data', apilog:'API Log' };
+  let settingsMode = 'list';
+
+  function switchTab(tab){
+    activeSettingsTab = tab;
+    settingsMode = 'detail';
+    $('settingsList').style.display = 'none';
+    $('settingsScreen').querySelectorAll('.settings-panel').forEach(p=> p.classList.toggle('active', p.dataset.panel===tab));
+    $('settingsTitle').textContent = SETTINGS_LABELS[tab] || 'Settings';
+  }
+
+  function showSettingsList(){
+    settingsMode = 'list';
+    $('settingsList').style.display = 'flex';
+    $('settingsScreen').querySelectorAll('.settings-panel').forEach(p=> p.classList.remove('active'));
+    $('settingsTitle').textContent = 'Settings';
+  }
+
+  function updateProviderFields(){
+    const provider = $('providerSelect').value;
+    $('apiKeyInput').value = profile.providers[provider].apiKey || '';
+    $('azureFieldsWrap').style.display = provider === 'azure' ? 'block' : 'none';
+    $('modelSection').style.display = provider === 'azure' ? 'none' : 'block';
+    $('refreshModelsBtn').style.display = 'none';
+    $('refreshNote').textContent = '';
+
+    const NOTES = {
+      openrouter: ['OpenRouter API Key', 'One key, access to many providers/models.'],
+      gemini: ['Google AI Studio API Key', 'Get one free at aistudio.google.com — no card needed.'],
+      openai: ['OpenAI API Key', 'From platform.openai.com/api-keys.'],
+      anthropic: ['Anthropic API Key', 'From console.anthropic.com — separate from a claude.ai login.'],
+      xai: ['xAI API Key', 'From console.x.ai.'],
+      deepseek: ['DeepSeek API Key', 'From platform.deepseek.com.'],
+      azure: ['Azure API Key', 'From your Azure OpenAI resource in Azure AI Foundry.']
+    };
+    const [label, note] = NOTES[provider] || ['API Key', ''];
+    $('apiKeyLabel').textContent = label;
+    $('apiKeyNote').textContent = note;
+
+    if(provider === 'azure'){
+      $('azureEndpointInput').value = profile.providers.azure.endpoint || '';
+      $('azureDeploymentInput').value = profile.providers.azure.deployment || '';
+      $('azureApiVersionInput').value = profile.providers.azure.apiVersion || '2024-10-21';
+    } else {
+      if(provider === 'openrouter'){
+        $('refreshModelsBtn').style.display = 'inline-block';
+        $('refreshNote').textContent = openrouterLiveModels ? `Loaded ${openrouterLiveModels.length} live models.` : '';
+      }
+      populateModelSelect(provider);
+    }
+  }
+
+  function populateSummarizerModelSelect(provider){
+    const sel = $('summarizerModelSelect');
+    sel.innerHTML = '';
+    // For OpenRouter, lead with the curated uncensored picks, then the regular list after (deduped) —
+    // for every other provider there's no meaningfully "looser" option, so just use its normal list.
+    let list = MODEL_LISTS[provider] || [];
+    if(provider === 'openrouter'){
+      const extra = (openrouterLiveModels || MODEL_LISTS.openrouter);
+      const curated = UNCENSORED_MODELS.openrouter;
+      list = curated.concat(extra.filter(id => !curated.includes(id)));
+    }
+    list.forEach(id=>{
+      const opt = document.createElement('option');
+      opt.value = id; opt.textContent = id;
+      sel.appendChild(opt);
+    });
+    const custom = document.createElement('option');
+    custom.value = 'custom'; custom.textContent = 'custom (type below)';
+    sel.appendChild(custom);
+
+    const currentModel = (profile.summarizerProvider === provider) ? profile.summarizerModel : list[0];
+    if(list.includes(currentModel)){
+      sel.value = currentModel;
+      $('summarizerCustomModelWrap').style.display = 'none';
+    } else if(profile.summarizerProvider === provider && profile.summarizerModel === 'custom'){
+      sel.value = 'custom';
+      $('summarizerCustomModelWrap').style.display = 'block';
+      $('summarizerCustomModelInput').value = profile.summarizerCustomModel || '';
+    } else {
+      sel.value = list[0];
+      $('summarizerCustomModelWrap').style.display = 'none';
+    }
+    updateSummarizerModelNote();
+  }
+
+  function updateSummarizerModelNote(){
+    const modelId = $('summarizerModelSelect').value;
+    // This specific free variant is being retired by OpenRouter on July 19, 2026 — flag it so
+    // it's not a silent surprise if it stops working after that date.
+    if(modelId === 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free'){
+      $('summarizerModelNote').textContent = 'Heads up: this free variant is being retired by OpenRouter on July 19, 2026 — the non-":free" version of the same model keeps working (small per-token cost).';
+    } else {
+      $('summarizerModelNote').textContent = '';
+    }
+  }
+
+  function updateSummarizerFields(){
+    const mode = profile.summarizerUseMain === false ? 'custom' : 'main';
+    renderToggleRow('summarizerModeRow', mode, v=>{
+      profile.summarizerUseMain = (v === 'main');
+      $('summarizerCustomWrap').style.display = v === 'custom' ? 'block' : 'none';
+    });
+    $('summarizerCustomWrap').style.display = mode === 'custom' ? 'block' : 'none';
+    $('summarizerProviderSelect').value = profile.summarizerProvider || 'openrouter';
+    $('summarizerApiKeyInput').value = profile.summarizerApiKey || '';
+    populateSummarizerModelSelect($('summarizerProviderSelect').value);
+  }
+
+
+  function populateModelSelect(provider){
+    const sel = $('modelSelect');
+    sel.innerHTML = '';
+    let list = MODEL_LISTS[provider];
+    if(provider === 'openrouter' && openrouterLiveModels) list = openrouterLiveModels;
+    list.forEach(id=>{
+      const opt = document.createElement('option');
+      opt.value = id; opt.textContent = id;
+      sel.appendChild(opt);
+    });
+    const custom = document.createElement('option');
+    custom.value = 'custom'; custom.textContent = 'custom (type below)';
+    sel.appendChild(custom);
+
+    const currentModel = (profile.activeProvider === provider) ? profile.model : list[0];
+    if(list.includes(currentModel)){
+      sel.value = currentModel;
+      $('customModelWrap').style.display = 'none';
+    } else if(profile.activeProvider === provider && profile.model === 'custom'){
+      sel.value = 'custom';
+      $('customModelWrap').style.display = 'block';
+      $('customModelInput').value = profile.customModel || '';
+    } else {
+      sel.value = list[0];
+      $('customModelWrap').style.display = 'none';
+    }
+  }
+
+  async function refreshOpenRouterModels(){
+    $('refreshModelsBtn').textContent = 'Loading...';
+    try{
+      const res = await fetch('https://openrouter.ai/api/v1/models');
+      const data = await res.json();
+      if(data && Array.isArray(data.data)){
+        openrouterLiveModels = data.data.map(m=>m.id).sort();
+        $('refreshNote').textContent = `Loaded ${openrouterLiveModels.length} live models.`;
+        populateModelSelect('openrouter');
+      }
+    }catch(e){ $('refreshNote').textContent = 'Could not fetch live list — using defaults.'; }
+    $('refreshModelsBtn').textContent = 'Refresh model list';
+  }
+
+  function renderGuiltTripToggle(){
+    const ap = activePersonaObj();
+    if(!ap) return;
+    renderToggleRow('guiltTripRow', ap.guiltTripEnabled === false ? 'off' : 'on', v=>{ ap.guiltTripEnabled = (v === 'on'); });
+  }
+
+  function renderRelationshipBadge(){
+    const ap = activePersonaObj();
+    const badge = $('relationshipBadge');
+    const note = $('relationshipNote');
+    if(!ap || !badge) return;
+    if(ap.relationship && ap.relationship.stageId){
+      const stageDef = RELATIONSHIP_STAGES.find(s=>s.id===ap.relationship.stageId);
+      badge.textContent = stageDef ? stageDef.label : 'Stranger';
+      note.textContent = ap.relationship.note || '';
+    } else {
+      badge.textContent = 'Stranger';
+      note.textContent = 'No conversation history to judge yet.';
+    }
+  }
+
+  function renderAvatarPreview(){
+    const box = $('avatarPhotoPreview');
+    if(!box) return;
+    box.innerHTML = profile.avatarImage
+      ? `<img src="${profile.avatarImage}" alt="" style="width:100%;height:100%;object-fit:cover;">`
+      : '<span style="font-size:11px; color:var(--text-faint); text-align:center; padding:0 4px;">No photo</span>';
+  }
+
+  function renderPersonaRow(){
+    const row = $('personaRow');
+    row.innerHTML = '';
+    profile.personas.forEach(p=>{
+      const chip = document.createElement('div');
+      chip.className = 'radio-chip' + (p.id === profile.activePersonaId ? ' selected' : '');
+      chip.textContent = p.name || 'Unnamed';
+      chip.addEventListener('click', async ()=>{
+        if(p.id === profile.activePersonaId) return;
+        await switchPersona(p.id);
+        $('botNameInput').value = profile.botName || '';
+        $('systemPromptInput').value = profile.systemPrompt || '';
+        renderAvatarGrid();
+        renderAvatarPreview();
+        renderPersonaRow();
+        renderGuiltTripToggle();
+        renderRelationshipBadge();
+        renderMemoryList();
+        showToast(`Switched to ${profile.botName}`);
+      });
+      row.appendChild(chip);
+    });
+    $('deletePersonaBtn').style.display = profile.personas.length > 1 ? 'flex' : 'none';
+    renderGuiltTripToggle();
+  }
+
+  async function addPersona(){
+    const id = 'persona_' + Date.now();
+    profile.personas.push({ id, name:'New Persona', avatarId:'moon', avatarImage:null, relationship:null, systemPrompt:'', tag:'default' });
+    await saveProfile(profile);
+    await switchPersona(id);
+    $('botNameInput').value = profile.botName || '';
+    $('systemPromptInput').value = profile.systemPrompt || '';
+    renderAvatarGrid();
+    renderAvatarPreview();
+    renderPersonaRow();
+    renderRelationshipBadge();
+    renderMemoryList();
+    $('botNameInput').focus();
+    showToast('New persona created — name it and make it yours');
+  }
+
+  async function deleteActivePersona(){
+    if(profile.personas.length <= 1) return;
+    const cur = profile.personas.find(p=>p.id===profile.activePersonaId);
+    if(!confirm(`Delete "${cur.name}"? This also permanently deletes its chats and memory. This can't be undone.`)) return;
+    const deadId = cur.id;
+    // Don't route this through switchPersona — we're discarding deadId's data, not
+    // saving it, and clearing activePersonaId to a falsy value would make
+    // currentPersonaId() fall back to 'custom' and overwrite that persona's storage.
+    profile.personas = profile.personas.filter(p=>p.id!==deadId);
+    const fallback = profile.personas[0];
+    profile.activePersonaId = fallback.id;
+    profile.botName = fallback.name || 'Lucid';
+    profile.avatarId = fallback.avatarId || 'moon';
+    profile.avatarImage = fallback.avatarImage || null;
+    profile.systemPrompt = fallback.systemPrompt || '';
+    await saveProfile(profile);
+    await store.delete(keyFor(CHATS_KEY, deadId), false).catch(()=>{});
+    await store.delete(keyFor(MEMORY_KEY, deadId), false).catch(()=>{});
+    chats = await loadChats();
+    baselineExistingChats();
+    memory = await loadMemory();
+    activeChatId = null;
+    renderChatList();
+    renderMessages();
+    refreshTopbar();
+    applyLogo();
+    $('botNameInput').value = profile.botName || '';
+    $('systemPromptInput').value = profile.systemPrompt || '';
+    renderAvatarGrid();
+    renderAvatarPreview();
+    renderPersonaRow();
+    renderRelationshipBadge();
+    renderMemoryList();
+    showToast('Persona deleted', 'deleted');
+  }
+
+  function renderAvatarGrid(){
+    const grid = $('avatarGrid');
+    grid.innerHTML = '';
+    AVATARS.forEach(a=>{
+      const div = document.createElement('div');
+      div.className = 'avatar-opt' + (profile.avatarId===a.id ? ' selected' : '');
+      div.style.background = a.bg;
+      div.textContent = a.emoji;
+      div.addEventListener('click', ()=>{
+        profile.avatarId = a.id;
+        document.querySelectorAll('.avatar-opt').forEach(el=>el.classList.remove('selected'));
+        div.classList.add('selected');
+      });
+      grid.appendChild(div);
+    });
+  }
+
+  function renderLengthChips(){
+    document.querySelectorAll('#lengthRow .radio-chip').forEach(c=>{
+      c.classList.toggle('selected', c.dataset.val === (profile.responseLength||'auto'));
+      c.onclick = ()=>{
+        profile.responseLength = c.dataset.val;
+        document.querySelectorAll('#lengthRow .radio-chip').forEach(x=>x.classList.remove('selected'));
+        c.classList.add('selected');
+      };
+    });
+  }
+
+  function renderToggleRow(rowId, currentVal, onChange){
+    document.querySelectorAll('#'+rowId+' .radio-chip').forEach(c=>{
+      c.classList.toggle('selected', c.dataset.val === currentVal);
+      c.onclick = ()=>{
+        document.querySelectorAll('#'+rowId+' .radio-chip').forEach(x=>x.classList.remove('selected'));
+        c.classList.add('selected');
+        onChange(c.dataset.val);
+      };
+    });
+  }
+
+  let activeMemFilter = 'all';
+  function renderMemTagFilters(){
+    const row = $('memTagFilterRow');
+    row.innerHTML = '';
+    ['all', ...MEM_TAGS].forEach(tag=>{
+      const chip = document.createElement('div');
+      chip.className = 'radio-chip' + (activeMemFilter===tag ? ' selected' : '');
+      chip.textContent = tag;
+      chip.style.fontSize = '11px'; chip.style.padding = '6px 12px';
+      chip.addEventListener('click', ()=>{ activeMemFilter = tag; renderMemoryList(); });
+      row.appendChild(chip);
+    });
+  }
+
+  function autoGrowTextarea(ta){
+    ta.style.height = 'auto';
+    ta.style.height = Math.max(44, ta.scrollHeight) + 'px';
+  }
+
+  function renderApiLog(){
+    const summaryEl = $('apiLogSummary');
+    const listEl = $('apiLogList');
+    if(!apiCallLog.length){
+      summaryEl.innerHTML = '';
+      listEl.innerHTML = '<div class="mem-empty">No API calls logged yet.</div>';
+      return;
+    }
+    const oneHourAgo = Date.now() - 3600000;
+    const recentCalls = apiCallLog.filter(e => e.time >= oneHourAgo);
+    const byPurpose = {};
+    recentCalls.forEach(e => { byPurpose[e.purpose] = (byPurpose[e.purpose]||0) + 1; });
+    const summaryParts = Object.keys(byPurpose).sort((a,b)=>byPurpose[b]-byPurpose[a]).map(p=>`${p}: ${byPurpose[p]}`).join(' · ');
+    summaryEl.innerHTML = `<div class="sec-note" style="margin-bottom:0;"><strong>${recentCalls.length}</strong> call${recentCalls.length===1?'':'s'} in the last hour${summaryParts ? ' — ' + escapeHtml(summaryParts) : ''}</div>`;
+
+    const entries = apiCallLog.slice().reverse().slice(0, 100); // newest first, cap displayed rows
+    listEl.innerHTML = entries.map(e=>{
+      const timeStr = new Date(e.time).toLocaleTimeString(undefined, {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+      const statusColor = e.ok ? 'var(--accent-hover)' : '#e35d5d';
+      const statusIcon = e.ok ? '✓' : '✗';
+      const errNote = e.error ? `<div style="font-size:11.5px; color:#e35d5d; margin-top:2px;">${escapeHtml(String(e.error).slice(0,140))}</div>` : '';
+      const contextNote = e.context ? `<div style="font-size:11.5px; color:var(--text-faint); margin-top:2px; font-style:italic;">${escapeHtml(String(e.context).slice(0,80))}</div>` : '';
+      return `<div class="mem-item" style="padding:10px 12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <span style="font-size:13px; font-weight:600;">${escapeHtml(e.purpose||'unknown')}</span>
+          <span style="font-size:11.5px; color:var(--text-faint);">${timeStr}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+          <span style="font-size:12px; color:var(--text-dim);">${escapeHtml(e.provider||'')} · ${escapeHtml(e.model||'')}${e.ms!=null?' · '+e.ms+'ms':''}</span>
+          <span style="font-size:13px; color:${statusColor}; font-weight:700;">${statusIcon}</span>
+        </div>
+        ${contextNote}
+        ${errNote}
+      </div>`;
+    }).join('');
+  }
+
+  function renderMemoryList(){
+    renderMemTagFilters();
+    const list = $('memoryList');
+    list.innerHTML = '';
+    if(memory.length === 0){
+      list.innerHTML = '<div class="mem-empty">Nothing remembered yet.</div>';
+      return;
+    }
+    const entries = (activeMemFilter === 'all' ? memory.slice() : memory.filter(m=>(m.tag||'general')===activeMemFilter))
+      .sort((a,b)=>b.updatedAt - a.updatedAt); // newest first, mixed across tags
+    if(!entries.length){ list.innerHTML = '<div class="mem-empty">Nothing in this category yet.</div>'; return; }
+    entries.forEach(m=>{
+      const tag = m.tag || 'general';
+      const div = document.createElement('div');
+      div.className = 'mem-item';
+      const dateStr = new Date(m.updatedAt).toLocaleDateString(undefined, {month:'short', day:'numeric'});
+      const tagOpts = MEM_TAGS.map(t=>`<option value="${t}" ${tag===t?'selected':''}>${t}</option>`).join('');
+      const titleText = tag === 'old-chat'
+        ? (m.chatTitle || (chats[m.chatId] && chats[m.chatId].title) || 'Untitled chat')
+        : m.title;
+      const titleLabel = titleText ? `<div class="mem-item-title">${escapeHtml(titleText)}</div>` : '';
+      div.innerHTML = `
+        ${titleLabel}
+        <div style="display:flex; align-items:flex-start; gap:8px;">
+          <span style="color:var(--accent-hover); font-size:15px; line-height:1.5; flex-shrink:0;">•</span>
+          <textarea data-id="${m.id}" style="flex:1;">${escapeHtml(m.text)}</textarea>
+        </div>
+        <div class="mem-item-actions">
+          <select class="mem-tag-select" data-id="${m.id}">${tagOpts}</select>
+          <span class="mem-date">${dateStr}</span>
+          <div class="mem-btns">
+            <button class="mem-btn save" data-id="${m.id}">Save</button>
+            <button class="mem-btn del" data-id="${m.id}">Delete</button>
+          </div>
+        </div>`;
+      list.appendChild(div);
+    });
+
+    list.querySelectorAll('.mem-item textarea').forEach(ta=>{
+      autoGrowTextarea(ta);
+      ta.addEventListener('input', ()=> autoGrowTextarea(ta));
+    });
+    list.querySelectorAll('.mem-btn.save').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const id = btn.dataset.id;
+        const ta = list.querySelector(`textarea[data-id="${id}"]`);
+        const sel = list.querySelector(`select[data-id="${id}"]`);
+        const entry = memory.find(m=>m.id===id);
+        if(entry && ta){ entry.text = ta.value.trim(); entry.tag = sel ? sel.value : entry.tag; entry.updatedAt = Date.now(); await saveMemoryStore(); showToast('Memory updated'); renderMemoryList(); }
+      });
+    });
+    list.querySelectorAll('.mem-btn.del').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const id = btn.dataset.id;
+        memory = memory.filter(m=>m.id!==id);
+        await saveMemoryStore();
+        showToast('Memory deleted', 'deleted');
+        renderMemoryList();
+      });
+    });
+  }
+
+  function openSettings(){
+    $('providerSelect').value = profile.activeProvider;
+    updateProviderFields();
+    renderPersonaRow();
+    $('botNameInput').value = profile.botName || '';
+    $('userNameInput').value = profile.userName || '';
+    $('systemPromptInput').value = profile.systemPrompt || '';
+    renderAvatarGrid();
+    renderAvatarPreview();
+    renderRelationshipBadge();
+    renderLengthChips();
+    renderLengthEstimateNote();
+    renderToggleRow('streamRow', profile.streaming || 'on', v=> profile.streaming = v);
+    renderToggleRow('markdownRow', profile.markdown || 'on', v=> profile.markdown = v);
+    renderToggleRow('welcomeRow', profile.welcomeMsg || 'on', v=> profile.welcomeMsg = v);
+    renderToggleRow('themeRow', profile.theme || 'light', v=>{ profile.theme = v; applyTheme(); });
+    renderMemoryList();
+    updateSummarizerFields();
+    renderApiLog();
+    $('oldPassInput').value=''; $('newPassInput').value=''; $('passChangeError').textContent='';
+    showSettingsList();
+    $('settingsScreen').style.display = 'flex';
+  }
+  function closeSettingsScreen(){
+    $('settingsScreen').style.display = 'none';
+    closeSidebar();
+    renderMessages();
+  }
+
+  async function reformatPersonaText(raw){
+    if(!raw || !raw.trim()) return raw || '';
+    const pconf = profile.providers[profile.activeProvider];
+    if(!pconf || !pconf.apiKey) return raw; // no key yet — save as-is, can't call a model
+    try{
+      const sys = 'Reorganize the following personality/system-prompt notes into a clean, scannable format: short ALL-CAPS or Title Case headings on their own line, each followed by "- " bulleted points underneath. Preserve every instruction, detail and nuance — do not drop, soften, or invent anything, just restructure it. Group related ideas under the same heading. Respond with ONLY the reformatted text, no preamble, no code fences.';
+      // scale the output cap to the input size so long personas don't get cut off — rough chars-to-tokens estimate, generous headroom
+      const estTokens = Math.ceil(raw.length / 3);
+      const maxTokens = Math.min(4000, Math.max(800, estTokens * 2));
+      const result = await callModel([{ role:'user', content: raw }], sys, maxTokens, undefined, { purpose:'persona-reformat' });
+      if(result.truncated) return raw; // never save a cut-off version — keep what the user wrote instead
+      const out = (result.text || '').trim();
+      return out || raw;
+    }catch(e){ return raw; } // best-effort — if the call fails, keep what the user typed
+  }
+
+  async function saveAllSettings(){
+    const saveBtn = $('saveSettingsBtn');
+    const originalLabel = saveBtn.textContent;
+    saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+    try{
+      const provider = $('providerSelect').value;
+      profile.activeProvider = provider;
+      profile.providers[provider].apiKey = $('apiKeyInput').value.trim();
+
+      if(provider === 'azure'){
+        profile.providers.azure.endpoint = $('azureEndpointInput').value.trim();
+        profile.providers.azure.deployment = $('azureDeploymentInput').value.trim();
+        profile.providers.azure.apiVersion = $('azureApiVersionInput').value.trim() || '2024-10-21';
+        profile.model = profile.providers.azure.deployment;
+        profile.customModel = '';
+      } else {
+        const sel = $('modelSelect').value;
+        if(sel === 'custom'){ profile.model = 'custom'; profile.customModel = $('customModelInput').value.trim(); }
+        else { profile.model = sel; profile.customModel = ''; }
+      }
+
+      profile.botName = $('botNameInput').value.trim() || 'Lucid';
+      profile.userName = $('userNameInput').value.trim();
+      const rawPersona = $('systemPromptInput').value;
+      profile.systemPrompt = (rawPersona === profile.systemPrompt) ? profile.systemPrompt : await reformatPersonaText(rawPersona);
+      // avatarId, avatarImage, responseLength, streaming, markdown, welcomeMsg already mutated live via click/upload handlers
+
+      // write the edited name/avatar/personality back into this persona's own entry
+      const activeP = profile.personas.find(x=>x.id===profile.activePersonaId);
+      if(activeP){ activeP.name = profile.botName; activeP.systemPrompt = profile.systemPrompt; activeP.avatarId = profile.avatarId; activeP.avatarImage = profile.avatarImage; }
+
+      // summarizerUseMain already mutated live via the toggle click handler
+      profile.summarizerProvider = $('summarizerProviderSelect').value;
+      profile.summarizerApiKey = $('summarizerApiKeyInput').value.trim();
+      const sumSel = $('summarizerModelSelect').value;
+      if(sumSel === 'custom'){ profile.summarizerModel = 'custom'; profile.summarizerCustomModel = $('summarizerCustomModelInput').value.trim(); }
+      else { profile.summarizerModel = sumSel; profile.summarizerCustomModel = ''; }
+
+      await saveProfile(profile);
+      await saveMemoryStore();
+      applyLogo();
+      refreshTopbar();
+      renderMessages();
+    }catch(e){
+      showToast('Save failed — try again');
+    }finally{
+      saveBtn.disabled = false; saveBtn.textContent = originalLabel;
+      closeSettingsScreen(); // always leave the settings screen, even if something above failed
+    }
+  }
+
+  // ---------- CHANGE PASSCODE ----------
+  async function changePasscode(){
+    const oldVal = $('oldPassInput').value;
+    const newVal = $('newPassInput').value;
+    $('passChangeError').textContent = '';
+    if(!oldVal || !newVal){ $('passChangeError').textContent = 'Fill in both fields.'; return; }
+    const oldHash = await hash(oldVal);
+    if(oldHash !== profile.passHash){ $('passChangeError').textContent = 'Current passcode is wrong.'; return; }
+    profile.passHash = await hash(newVal);
+    await saveProfile(profile);
+    $('oldPassInput').value=''; $('newPassInput').value='';
+    showToast('Passcode updated');
+  }
+
+  // ---------- USAGE / CREDITS POPUP ----------
+  function creditEstimateRows(){
+    return ['auto','short','medium','long'].map(k=>{
+      const cfg = LENGTH_MAP[k];
+      const label = k.charAt(0).toUpperCase()+k.slice(1);
+      const note = k==='auto' ? ' (adapts to the question)' : '';
+      return { label, text: `~${cfg.tokens} tokens max${note}` };
+    });
+  }
+  function renderLengthEstimateNote(){
+    const rows = creditEstimateRows();
+    $('lengthEstimateNote').innerHTML = rows.map(r=>`<div>${r.label}: ${r.text}</div>`).join('');
+  }
+
+  let usageCountdownTimer = null;
+  function formatCountdown(ms){
+    if(ms <= 0) return 'any moment now';
+    const totalSec = Math.ceil(ms/1000);
+    const m = Math.floor(totalSec/60), s = totalSec%60;
+    return m > 0 ? `${m}m ${s}s` : `${s}s`;
+  }
+  function renderUsageScreen(){
+    const provider = profile.activeProvider;
+    const hasKey = !!(profile.providers[provider] && profile.providers[provider].apiKey);
+    $('usageProviderLine').textContent = PROVIDER_LABELS[provider] || provider;
+    const info = rateLimitInfo;
+    let cards = [];
+    if(!hasKey){
+      $('usageSourceNote').textContent = 'Add an API key in Settings → Provider to start tracking usage.';
+    } else if(info.provider === provider && info.mode === 'live' && info.remaining !== null){
+      $('usageSourceNote').textContent = 'Live numbers reported by your provider on the last request.';
+      cards = [
+        { num: info.remaining, lbl: 'Requests left' },
+        { num: info.limit, lbl: 'Per-window limit' }
+      ];
+    } else if(info.provider === provider && info.mode === 'estimated'){
+      $('usageSourceNote').textContent = 'Gemini doesn\'t report real numbers over the API — this is a rough local estimate, not official.';
+      cards = [
+        { num: info.remaining, lbl: 'Est. requests left' },
+        { num: info.limit, lbl: 'Assumed per-minute cap' }
+      ];
+    } else {
+      $('usageSourceNote').textContent = 'This provider doesn\'t expose usage over the API — check its dashboard for real numbers. Send a message and check back here.';
+    }
+    $('usageGrid').innerHTML = cards.length
+      ? cards.map(c=>`<div class="stat-card"><div class="num">${c.num}</div><div class="lbl">${c.lbl}</div></div>`).join('')
+      : '';
+    if(info.provider === provider && info.resetAt){
+      const row = document.createElement('div');
+      row.className = 'stat-card';
+      row.innerHTML = `<div class="num" id="usageCountdownNum">${formatCountdown(info.resetAt - Date.now())}</div><div class="lbl">Recovers in</div>`;
+      $('usageGrid').appendChild(row);
+    }
+    $('usageEstimateList').innerHTML = creditEstimateRows().map(r=>`<div class="field-note">${r.label}: ${r.text}</div>`).join('');
+  }
+  function openUsageScreen(){
+    renderUsageScreen();
+    $('usageScreen').style.display = 'flex';
+    if(usageCountdownTimer) clearInterval(usageCountdownTimer);
+    usageCountdownTimer = setInterval(()=>{
+      const el = $('usageCountdownNum');
+      if(!el || !rateLimitInfo.resetAt) return;
+      const rem = rateLimitInfo.resetAt - Date.now();
+      el.textContent = formatCountdown(rem);
+      if(rem <= 0) renderUsageScreen();
+    }, 1000);
+  }
+  function closeUsageScreen(){
+    $('usageScreen').style.display = 'none';
+    if(usageCountdownTimer){ clearInterval(usageCountdownTimer); usageCountdownTimer = null; }
+  }
+
+  // ---------- STATS ----------
+  const STOPWORDS = new Set(['this','that','with','have','from','your','about','just','like','what','when','where','which','while','would','could','should','their','there','these','those','been','being','into','also','then','than','they','them','some','such','only','over','more','most','very','know','want','need','make','made','doing','does','okay','yeah','well','really','much','many','even','still','back','were','will','cant','dont','wont','isnt','didnt','wasnt','because','actually','probably','maybe','right','sure','thanks','thank','please','hello','hi','hey']);
+  function extractKeywords(){
+    const freq = {};
+    Object.values(chats).forEach(c=>{
+      (c.messages||[]).forEach(m=>{
+        const words = (m.content||'').toLowerCase().match(/\b[a-z']{4,}\b/g) || [];
+        words.forEach(w=>{
+          w = w.replace(/'s$/,'');
+          if(STOPWORDS.has(w)) return;
+          freq[w] = (freq[w]||0) + 1;
+        });
+      });
+    });
+    return Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,14).map(([w])=>w);
+  }
+
+  function openStats(){
+    const chatIds = Object.keys(chats);
+    let msgCount = 0, userMsgCount = 0;
+    const daySet = new Set();
+    chatIds.forEach(id=>{
+      (chats[id].messages||[]).forEach(m=>{
+        msgCount++;
+        if(m.role==='user') userMsgCount++;
+      });
+      daySet.add(new Date(chats[id].updatedAt).toDateString());
+    });
+    const daysSince = Math.max(1, Math.round((Date.now() - (profile.createdAt||Date.now())) / 86400000));
+    const cards = [
+      { num: (activePersonaObj() && activePersonaObj().lastActiveAt) ? formatTimeAgo(Date.now() - activePersonaObj().lastActiveAt) : '—', lbl: 'Since last message' },
+      { num: chatIds.length, lbl: 'Total chats' },
+      { num: msgCount, lbl: 'Total messages' },
+      { num: userMsgCount, lbl: 'Messages sent' },
+      { num: memory.length, lbl: 'Memories stored' },
+      { num: daySet.size, lbl: 'Active days' },
+      { num: daysSince, lbl: 'Days since setup' }
+    ];
+    $('statsGrid').innerHTML = cards.map(c=>`<div class="stat-card"><div class="num">${c.num}</div><div class="lbl">${c.lbl}</div></div>`).join('');
+    const words = extractKeywords();
+    $('statsWordsRow').innerHTML = words.length
+      ? words.map(w=>`<div class="radio-chip" style="cursor:default;">${escapeHtml(w)}</div>`).join('')
+      : '<div class="mem-empty" style="padding:10px 0;">Chat a bit more and this will fill in.</div>';
+    $('statsScreen').style.display = 'flex';
+  }
+
+  // ---------- CHAT PERSONA OVERRIDE ----------
+  function openChatPersona(){
+    const chat = activeChat();
+    if(!chat){ showToast('Open a chat first'); return; }
+    if(!chat.persona) chat.persona = { enabled:false, botName:'', avatarId:'', systemPrompt:'' };
+    renderToggleRow('chatPersonaToggleRow', chat.persona.enabled ? 'on' : 'off', v=>{
+      chat.persona.enabled = v==='on';
+      $('chatPersonaFields').style.display = chat.persona.enabled ? 'block' : 'none';
+    });
+    $('chatPersonaFields').style.display = chat.persona.enabled ? 'block' : 'none';
+    $('chatBotNameInput').value = chat.persona.botName || '';
+    $('chatSystemPromptInput').value = chat.persona.systemPrompt || '';
+    const grid = $('chatAvatarGrid');
+    grid.innerHTML = '';
+    AVATARS.forEach(a=>{
+      const div = document.createElement('div');
+      div.className = 'avatar-opt' + ((chat.persona.avatarId||profile.avatarId)===a.id ? ' selected' : '');
+      div.style.background = a.bg; div.textContent = a.emoji;
+      div.addEventListener('click', ()=>{
+        chat.persona.avatarId = a.id;
+        grid.querySelectorAll('.avatar-opt').forEach(el=>el.classList.remove('selected'));
+        div.classList.add('selected');
+      });
+      grid.appendChild(div);
+    });
+    $('chatPersonaScreen').style.display = 'flex';
+  }
+  async function saveChatPersona(){
+    const chat = activeChat();
+    if(!chat) return;
+    const saveBtn = $('saveChatPersonaBtn');
+    const originalLabel = saveBtn.textContent;
+    saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+    try{
+      chat.persona.botName = $('chatBotNameInput').value.trim();
+      const rawChatPersona = $('chatSystemPromptInput').value;
+      chat.persona.systemPrompt = (rawChatPersona === chat.persona.systemPrompt) ? chat.persona.systemPrompt : await reformatPersonaText(rawChatPersona);
+      await saveChats();
+      refreshTopbar(); renderMessages(); renderChatList();
+      showToast('Chat persona saved');
+    }catch(e){
+      showToast('Save failed — try again');
+    }finally{
+      saveBtn.disabled = false; saveBtn.textContent = originalLabel;
+      $('chatPersonaScreen').style.display = 'none'; // always leave the screen, even on error
+    }
+  }
+
+  // ---------- DATA: EXPORT / IMPORT / CLEAR ----------
+  async function exportData(){
+    // gather every persona's chats + memory from storage — not just the currently active one
+    const personaData = {};
+    for(const p of profile.personas){
+      const isActive = p.id === profile.activePersonaId;
+      personaData[p.id] = {
+        chats: isActive ? chats : await loadChatsRaw(p.id),
+        memory: isActive ? memory : await loadMemoryRaw(p.id)
+      };
+    }
+    const payload = { profile, personaData, exportedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'lucid-backup.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    const chatCount = Object.values(personaData).reduce((n,d)=>n+Object.keys(d.chats).length,0);
+    const memCount = Object.values(personaData).reduce((n,d)=>n+d.memory.length,0);
+    const pCount = profile.personas.length;
+    showToast(`Exported ${chatCount} chat${chatCount===1?'':'s'}, ${memCount} ${memCount===1?'memory':'memories'} across ${pCount} persona${pCount===1?'':'s'}, and all settings`);
+  }
+
+  function importData(file){
+    const reader = new FileReader();
+    reader.onload = async (e)=>{
+      try{
+        const data = JSON.parse(e.target.result);
+        let settingsRestored = false;
+        if(data.profile){
+          profile = Object.assign(defaultProfile(profile.passHash), data.profile, { passHash: profile.passHash });
+          normalizePersonas(profile);
+          settingsRestored = true;
+        }
+        let totalChats = 0, totalMem = 0;
+        if(data.personaData && typeof data.personaData === 'object'){
+          for(const id of Object.keys(data.personaData)){
+            const entry = data.personaData[id] || {};
+            const c = entry.chats || {};
+            const m = Array.isArray(entry.memory) ? entry.memory : [];
+            await saveChatsRaw(id, c);
+            await saveMemoryRaw(id, m);
+            totalChats += Object.keys(c).length;
+            totalMem += m.length;
+          }
+        } else {
+          // old single-persona export format — restore straight into the 'custom' persona
+          const c = data.chats || {};
+          const m = Array.isArray(data.memory) ? data.memory : [];
+          await saveChatsRaw('custom', c);
+          await saveMemoryRaw('custom', m);
+          totalChats = Object.keys(c).length; totalMem = m.length;
+        }
+        await saveProfile(profile);
+        chats = await loadChats();
+        memory = await loadMemory();
+        refreshTopbar(); renderChatList(); renderMessages(); applyTheme();
+        showToast(`Imported ${totalChats} chat${totalChats===1?'':'s'}, ${totalMem} ${totalMem===1?'memory':'memories'}${settingsRestored ? ', and all settings' : ' (no settings found in file)'}`);
+      }catch(err){ alert('Could not read that file — make sure it\'s a Lucid export.'); }
+    };
+    reader.readAsText(file);
+  }
+
+  // ---------- WIRE UP ----------
+  $('lockBtn').addEventListener('click', handleLockSubmit);
+  $('passInput').addEventListener('keydown', e=>{ if(e.key==='Enter') handleLockSubmit(); });
+  $('lockBtn2').addEventListener('click', doLock);
+  $('newChatBtn').addEventListener('click', newChat);
+  $('settingsBtn').addEventListener('click', openSettings);
+  $('settingsBack').addEventListener('click', ()=>{ if(settingsMode==='detail') showSettingsList(); else closeSettingsScreen(); });
+  $('saveSettingsBtn').addEventListener('click', saveAllSettings);
+  $('addPersonaBtn').addEventListener('click', addPersona);
+  $('deletePersonaBtn').addEventListener('click', deleteActivePersona);
+  $('uploadAvatarBtn').addEventListener('click', ()=> $('avatarPhotoInput').click());
+  $('avatarPhotoInput').addEventListener('change', (e)=>{
+    const f = e.target.files[0];
+    if(!f) return;
+    const reader = new FileReader();
+    reader.onload = (ev)=>{ profile.avatarImage = ev.target.result; renderAvatarPreview(); showToast('Photo set — hit Save to keep it'); };
+    reader.readAsDataURL(f);
+    e.target.value = '';
+  });
+  $('removeAvatarBtn').addEventListener('click', ()=>{
+    profile.avatarImage = null;
+    renderAvatarPreview();
+    showToast('Photo removed — hit Save to keep it', 'deleted');
+  });
+  $('refreshRelationshipBtn').addEventListener('click', async ()=>{
+    const chat = activeChat();
+    if(!chat || !chat.messages.length){ showToast('Open a chat with some messages first'); return; }
+    const btn = $('refreshRelationshipBtn');
+    btn.disabled = true; const orig = btn.textContent; btn.textContent = 'Checking…';
+    try{ await runRelationshipPass(chat); renderRelationshipBadge(); showToast('Relationship status updated'); }
+    catch(e){ showToast('Check failed — try again', 'deleted'); }
+    finally{ btn.disabled = false; btn.textContent = orig; }
+  });
+  $('hamburgerBtn').addEventListener('click', openSidebar);
+  $('sideClose').addEventListener('click', closeSidebar);
+  $('sidebarBackdrop').addEventListener('click', closeSidebar);
+  $('sendBtn').addEventListener('click', sendMessage);
+  // Enter now just makes a new line (default textarea behavior) — send via the button only.
+  $('composerInput').addEventListener('input', function(){ this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,220)+'px'; });
+
+  document.querySelectorAll('.settings-list-item').forEach(btn=> btn.addEventListener('click', ()=> switchTab(btn.dataset.tab)));
+  $('providerSelect').addEventListener('change', updateProviderFields);
+  $('modelSelect').addEventListener('change', e=>{ $('customModelWrap').style.display = e.target.value==='custom' ? 'block' : 'none'; });
+  $('refreshModelsBtn').addEventListener('click', refreshOpenRouterModels);
+  $('summarizerProviderSelect').addEventListener('change', e=> populateSummarizerModelSelect(e.target.value));
+  $('summarizerModelSelect').addEventListener('change', e=>{
+    $('summarizerCustomModelWrap').style.display = e.target.value==='custom' ? 'block' : 'none';
+    updateSummarizerModelNote();
+  });
+  $('addMemoryBtn').addEventListener('click', async ()=>{
+    memory.push({ id:'mem_'+Date.now(), text:'', tag:'general', updatedAt: Date.now() });
+    await saveMemoryStore();
+    renderMemoryList();
+    const list = $('memoryList');
+    const boxes = list.querySelectorAll('textarea');
+    if(boxes.length) boxes[0].focus();
+  });
+  $('exportBtn').addEventListener('click', exportData);
+  $('importBtn').addEventListener('click', ()=> $('importFile').click());
+  $('clearApiLogBtn').addEventListener('click', async ()=>{
+    apiCallLog = []; await saveApiCallLog(); renderApiLog(); showToast('Log cleared', 'deleted');
+  });
+  $('importFile').addEventListener('change', e=>{ if(e.target.files[0]) importData(e.target.files[0]); });
+  $('clearChatsBtn').addEventListener('click', async ()=>{
+    if(!confirm('Delete all chats? This cannot be undone.')) return;
+    chats = {}; activeChatId = null; await saveChats(); renderChatList(); renderMessages(); showToast('All chats cleared','deleted');
+  });
+  $('clearMemoryBtn').addEventListener('click', async ()=>{
+    if(!confirm('Clear all memory? This cannot be undone.')) return;
+    memory = []; await saveMemoryStore(); renderMemoryList(); showToast('Memory cleared','deleted');
+  });
+
+  // Search
+  $('chatSearchInput').addEventListener('input', renderChatList);
+
+  // Message edit/regenerate wiring is inline in renderMessages()
+
+  // Memory approval toast
+  $('approvalAccept').addEventListener('click', async ()=>{ if(pendingApproval) await pendingApproval(); hideApproval(); });
+  $('approvalReject').addEventListener('click', hideApproval);
+
+  // Composer: image attach
+  $('attachBtn').addEventListener('click', ()=> $('attachFile').click());
+  $('attachFile').addEventListener('change', (e)=>{
+    const files = Array.from(e.target.files || []);
+    let remaining = files.length;
+    if(!remaining) return;
+    files.forEach(f=>{
+      const reader = new FileReader();
+      reader.onload = (ev)=>{ attachedImages.push(ev.target.result); renderImgPreviewRow(); };
+      reader.readAsDataURL(f);
+    });
+    e.target.value = '';
+  });
+
+  // Passcode change
+  $('changePassBtn').addEventListener('click', changePasscode);
+
+  // Stats
+  $('statsBtn').addEventListener('click', ()=>{ openStats(); closeSidebar(); });
+  $('statsBack').addEventListener('click', ()=> $('statsScreen').style.display = 'none');
+
+  $('creditChipBtn').addEventListener('click', openUsageScreen);
+  $('usageBack').addEventListener('click', closeUsageScreen);
+
+  // Chat persona override
+  $('chatPersonaBtn').addEventListener('click', openChatPersona);
+  $('chatPersonaBack').addEventListener('click', ()=> $('chatPersonaScreen').style.display = 'none');
+  $('saveChatPersonaBtn').addEventListener('click', saveChatPersona);
+
+  // One-time baseline: any chat that already exists and has never been touched by the
+  // summarizer gets marked as "caught up" without actually generating a summary for it —
+  // so the old backlog is permanently skipped instead of trickling through the paced sweep.
+  // Only new activity from this point forward (new messages in a chat, or brand new chats)
+  // will ever trigger a real summarization call. Safe to run every load — it only touches
+  // chats missing the marker, so anything already summarized (or already baselined) is untouched.
+  function baselineExistingChats(){
+    let changed = false;
+    Object.keys(chats).forEach(id=>{
+      const c = chats[id];
+      if(c._oldChatSummarizedCount === undefined){
+        c._oldChatSummarizedCount = c.messages.length;
+        changed = true;
+      }
+    });
+    if(changed) saveChats();
+  }
+
+  (async function init(){
+    await initLock();
+    sessionPrevActiveAt = (profile && activePersonaObj()) ? (activePersonaObj().lastActiveAt || null) : null;
+    chats = await loadChats();
+    baselineExistingChats();
+    memory = await loadMemory();
+    apiCallLog = await loadApiCallLog();
+    setTimeout(backfillMemoryTitles, 4000); // small delay so this doesn't race your first message on open
+    appReady = true; // only now is it safe for the background sweep to actually run — see triggerBackgroundSweep
+  })();
+
+  // Sweep old chats for summarization whenever the app is backgrounded or closed —
+  // mobile browsers don't reliably fire 'beforeunload', so visibilitychange + pagehide
+  // together cover switching apps, locking the phone, and closing the tab. They often
+  // both fire for the SAME event though, which was doubling the sweep — debounce it.
+  let lastBackgroundSweepAt = 0;
+  function triggerBackgroundSweep(){
+    // Some mobile browsers/webviews fire an early visibilitychange (hidden->visible or a
+    // brief hidden blip) while the page is still loading, before the user has done anything.
+    // Without this guard that fired a sweep the moment the site opened. Only run once init()
+    // is done AND a chat has actually been opened this session.
+    if(!appReady) return;
+    const now = Date.now();
+    if(now - lastBackgroundSweepAt < 3000) return; // visibilitychange + pagehide double-fire guard
+    lastBackgroundSweepAt = now;
+    // Just the chat you're actually closing/backgrounding out of — one targeted call, not a
+    // batch sweep of unrelated old chats. A single call is far more likely to actually finish
+    // before the browser tears the page down than a multi-call batch would be.
+    if(profile && activeChatId) maybeSummarizeOldChat(activeChatId);
+  }
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'hidden') triggerBackgroundSweep();
+  });
+  window.addEventListener('pagehide', triggerBackgroundSweep);
+})();
+</script>
+</body>
+</html>
